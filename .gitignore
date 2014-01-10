@@ -1,3 +1,11 @@
+# common ignore
+*~
+MANIFEST.MF
+target/
+
+pom.xml.orig
+*.versionsBackup
+
 *.class
 
 # Package Files #
@@ -14,3 +22,21 @@ gwt-unitCache/
 # more caches and things from deploy #
 war/WEB-INF/deploy/
 war/WEB-INF/classes/
+
+# eclipse specific
+.settings
+.settings/
+.project
+.classpath
+.metadata
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# unix specific
+.DS_Store
+/*.*/.DS_Store
+.directory
+
+# static plugins
+.pmd

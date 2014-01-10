@@ -1,8 +1,8 @@
 package pro.redsoft.demo.textbox.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -18,11 +18,16 @@ public class CrazyTextBoxEntryPoint implements EntryPoint {
   public void onModuleLoad() {
 
     textBox.setSize("600px", "30px");
-    textBox.setText("abcdefghwxyz 123456");
+    // textBox.setText("abcdefghwxyz 123456");
 
-    RootPanel.get("crazyTextBoxContainer").add(textBox);
+    // init settingsPanel
+    SettingsPanel settingsPanel = new SettingsPanel();
+    settingsPanel.addChangeHandler(textBox);
 
-    // font Selector
-    ListBox listBox = new ListBox();
+    VerticalPanel root = new VerticalPanel();
+    root.add(textBox);
+    root.add(settingsPanel);
+
+    RootPanel.get("crazyTextBoxContainer").add(root);
   }
 }

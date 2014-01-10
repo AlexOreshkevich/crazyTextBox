@@ -4,6 +4,7 @@ import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.canvas.dom.client.Context2d.TextAlign;
 import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
+import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -28,7 +29,7 @@ import com.google.gwt.user.client.ui.FocusPanel;
  * 
  * @author Alex N. Oreshkevich
  */
-public class CustomTextBox extends FocusPanel {
+public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
   private interface KeyProcessingStrategy {
 
@@ -86,12 +87,18 @@ public class CustomTextBox extends FocusPanel {
     }
   }
 
+  private StringBuilder textBuilder = new StringBuilder();
+
   private class StrategyProvider {
 
     KeyProcessingStrategy evenStrategy = new EvenKeyProcessingStrategy();
     KeyProcessingStrategy oddStrategy = new OddKeyProcessingStrategy();
 
     int cntr = 0;
+
+    void init() {
+      cntr = 0;
+    }
 
     KeyProcessingStrategy getStrategy() {
       return (++cntr % 2) == 0 ? evenStrategy : oddStrategy;
@@ -121,10 +128,33 @@ public class CustomTextBox extends FocusPanel {
 
     // Note: It’s best to use vector fonts when scaling or rotating text,
     // because bitmapped fonts can appear jagged when scaled up or rotated.
-    context.setFont("20pt Arial");
+    initContext("20pt Monaco");
+  }
+
+  private void initContext(String font) {
+
+    provider.init();
+    dx = 0;
+
+    context.setFont(font);
     context.setTextAlign(TextAlign.LEFT);
     context.setFillStyle("black");
     context.setTextBaseline(TextBaseline.TOP);
+  }
+
+  @Override
+  public void onChangeSettings(FontSettings settings) {
+
+    CanvasElement elem = canvas.getCanvasElement();
+
+    context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
+
+    String font = settings.getFontSize() + " "
+        + settings.getFont().getFontName();
+
+    initContext(font);
+
+    setText(textBuilder.toString());
   }
 
   @Override
@@ -152,8 +182,12 @@ public class CustomTextBox extends FocusPanel {
 
       @Override
       public void onKeyPress(KeyPressEvent event) {
+
+        char symbol = event.getCharCode();
+
         // choose and execute strategy
-        provider.getStrategy().addChar(event.getCharCode(), canvas, context);
+        provider.getStrategy().addChar(symbol, canvas, context);
+        textBuilder.append(symbol);
       }
     });
   }
@@ -162,5 +196,7 @@ public class CustomTextBox extends FocusPanel {
     for (char symbol : text.toCharArray()) {
       provider.getStrategy().addChar(symbol, canvas, context);
     }
+    textBuilder = new StringBuilder();
+    textBuilder.append(text);
   }
 }

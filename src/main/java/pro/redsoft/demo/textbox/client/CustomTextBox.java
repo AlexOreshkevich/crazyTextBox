@@ -6,7 +6,11 @@ import com.google.gwt.canvas.dom.client.Context2d.TextAlign;
 import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.user.client.ui.FocusPanel;
 
 /**
  * <p>
@@ -24,7 +28,7 @@ import com.google.gwt.user.client.ui.Composite;
  * 
  * @author Alex N. Oreshkevich
  */
-public class CustomTextBox extends Composite {
+public class CustomTextBox extends FocusPanel {
 
   private interface KeyProcessingStrategy {
 
@@ -46,15 +50,15 @@ public class CustomTextBox extends Composite {
       Context2d itemContext = item.getContext2d();
 
       // load settings from parent context
-      // itemContext.setFont(context.getFont());
-      // itemContext.setFillStyle(context.getFillStyle());
-      // itemContext.setTextAlign(TextAlign.LEFT);
-      // itemContext.setTextBaseline(TextBaseline.BOTTOM);
+      itemContext.setFont(context.getFont());
+      itemContext.setFillStyle(context.getFillStyle());
+      itemContext.setTextAlign(TextAlign.LEFT);
+      itemContext.setTextBaseline(TextBaseline.BOTTOM);
 
       // rotate text following recommendations from
       // https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/HTML-canvas-guide/AddingText/AddingText.html
       itemContext.save();
-      // itemContext.scale(1, -1);
+      itemContext.scale(1, -1);
       itemContext.fillText(symbol + "", 0, 0);
       itemContext.restore();
 
@@ -75,38 +79,10 @@ public class CustomTextBox extends Composite {
     public void addChar(char symbol, Canvas canvas, Context2d context) {
 
       // update current dx
-      // updateIndex(context, symbol);
+      updateIndex(context, symbol);
 
       // draw symbol as usually
-      // context.fillText(symbol + "", dx, 0);
-
-      // create partitional canvas and initialize context
-      Canvas item = Canvas.createIfSupported();
-
-      Context2d itemContext = item.getContext2d();
-
-      // load settings from parent context
-      itemContext.setFont(context.getFont());
-      itemContext.setFillStyle(context.getFillStyle());
-      itemContext.setTextAlign(TextAlign.LEFT);
-      itemContext.setTextBaseline(TextBaseline.BOTTOM);
-
-      // rotate text following recommendations from
-      // https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/HTML-canvas-guide/AddingText/AddingText.html
-      itemContext.save();
-      // itemContext.scale(1, -1);
-      itemContext.fillText(symbol + "", 0, 0);
-      itemContext.getCanvas().getStyle().setBorderStyle(BorderStyle.SOLID);
-      itemContext.getCanvas().getStyle().setBorderColor("red");
-      itemContext.getCanvas().getStyle().setBorderWidth(1., Unit.PX);
-      itemContext.restore();
-
-      // update current dx
-      updateIndex(itemContext, symbol);
-
-      // draw symbol as image from rotated source-symbol
-
-      context.drawImage(itemContext.getCanvas(), dx, 0);
+      context.fillText(symbol + "", dx, 0);
     }
   }
 
@@ -134,21 +110,21 @@ public class CustomTextBox extends Composite {
   private double dx = 0;
 
   CustomTextBox() {
-    initWidget(canvas);
+    setWidget(canvas);
     registerHandlers();
 
     getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
     getElement().getStyle().setBorderColor("black");
     getElement().getStyle().setBorderWidth(1., Unit.PX);
     getElement().getStyle().setPadding(5., Unit.PX);
-    // getElement().getStyle().setPaddingTop(40., Unit.PX);
+    getElement().getStyle().setPaddingTop(40., Unit.PX);
 
     // Note: It’s best to use vector fonts when scaling or rotating text,
     // because bitmapped fonts can appear jagged when scaled up or rotated.
     context.setFont("20pt Arial");
     context.setTextAlign(TextAlign.LEFT);
     context.setFillStyle("black");
-    // context.setTextBaseline(TextBaseline.TOP);
+    context.setTextBaseline(TextBaseline.TOP);
   }
 
   @Override
@@ -164,22 +140,22 @@ public class CustomTextBox extends Composite {
 
   void registerHandlers() {
 
-    // addDomHandler(new ClickHandler() {
-    //
-    // @Override
-    // public void onClick(ClickEvent event) {
-    // setFocus(true);
-    // }
-    // }, ClickEvent.getType());
-    //
-    // addKeyPressHandler(new KeyPressHandler() {
-    //
-    // @Override
-    // public void onKeyPress(KeyPressEvent event) {
-    // // choose and execute strategy
-    // provider.getStrategy().addChar(event.getCharCode(), canvas, context);
-    // }
-    // });
+    addDomHandler(new ClickHandler() {
+
+      @Override
+      public void onClick(ClickEvent event) {
+        setFocus(true);
+      }
+    }, ClickEvent.getType());
+
+    addKeyPressHandler(new KeyPressHandler() {
+
+      @Override
+      public void onKeyPress(KeyPressEvent event) {
+        // choose and execute strategy
+        provider.getStrategy().addChar(event.getCharCode(), canvas, context);
+      }
+    });
   }
 
   public void setText(String text) {

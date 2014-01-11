@@ -180,7 +180,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
   }
 
   private boolean isNumber(char c) {
-    return ((c) >= 49) && ((c) <= 59);
+    return ((c) >= 48) && ((c) <= 59);
   }
 
   @Override

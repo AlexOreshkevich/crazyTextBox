@@ -29,5 +29,7 @@ public class CrazyTextBoxEntryPoint implements EntryPoint {
     root.add(settingsPanel);
 
     RootPanel.get("crazyTextBoxContainer").add(root);
+
+    textBox.setFocus(true);
   }
 }

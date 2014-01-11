@@ -38,25 +38,21 @@ class CursorAnimation extends Animation {
     ctx.setStrokeStyle(strokeStyle);
     ctx.beginPath();
     ctx.setLineCap(LineCap.BUTT);
-
-    double curDx = customTextBox.dx;
-    if (curDx == 0) {
-      curDx = customTextBox.fontHeight / 10;
-    } else {
-      curDx -= customTextBox.fontHeight / 9;
-    }
-
+    double curDx = customTextBox.dx + (customTextBox.fontHeight / 10);
     ctx.moveTo(curDx, customTextBox.fontHeight / 10);
     ctx.lineTo(curDx, 1.2 * customTextBox.fontHeight);
-
     ctx.stroke();
   }
 
-  void updatePosition() {
+  void removePreviousCursor() {
     double dx = customTextBox.dx;
     Context2d ctx = customTextBox.context;
     ctx.save();
-    // ctx.clearRect(0.95 * dx, 0, 2, customTextBox.fontHeight);
+
+    double w = 0.95 * customTextBox.fontHeight;
+    double h = 1.2 * customTextBox.fontHeight;
+
+    ctx.clearRect(dx, 0, w, h);
     ctx.restore();
   }
 }

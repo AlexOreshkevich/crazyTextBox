@@ -61,8 +61,6 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
       itemContext.scale(1, -1);
       itemContext.fillText(symbol + "", 0, fontHeight + y);
       itemContext.restore();
-
-      // draw, then update dx
       context.drawImage(itemContext.getCanvas(), dx, 0);
       updateIndex(itemContext, symbol);
     }
@@ -83,8 +81,6 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
       itemContext.translate(0, fontHeight);
       itemContext.fillText(symbol + "", 0, 0);
       itemContext.restore();
-
-      // draw, then update dx
       context.drawImage(itemContext.getCanvas(), dx, 0);
       updateIndex(itemContext, symbol);
     }
@@ -259,7 +255,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
   }
 
   private void updateIndex(Context2d context, char symbol) {
-    dx += fontHeight * 0.9;
+    dx += fontHeight * 0.95;
     animation.updatePosition();
   }
 }

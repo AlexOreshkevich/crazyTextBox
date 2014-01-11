@@ -37,7 +37,7 @@ class CursorAnimation extends Animation {
     ctx.beginPath();
     double curDx = (this.customTextBox.fontHeight / 10) + this.customTextBox.dx;
     ctx.moveTo(curDx, this.customTextBox.fontHeight / 10);
-    ctx.lineTo(curDx, (99 * this.customTextBox.fontHeight) / 100);
+    ctx.lineTo(curDx, 1.2 * this.customTextBox.fontHeight);
     ctx.stroke();
   }
 

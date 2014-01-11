@@ -2,6 +2,7 @@ package pro.redsoft.demo.textbox.client;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.canvas.dom.client.Context2d;
+import com.google.gwt.canvas.dom.client.Context2d.LineCap;
 
 // 1# draw black line
 // 2# pause for 0.3 of progress
@@ -32,12 +33,16 @@ class CursorAnimation extends Animation {
   }
 
   private void drawCursor(String strokeStyle) {
+
     Context2d ctx = customTextBox.context;
     ctx.setStrokeStyle(strokeStyle);
     ctx.beginPath();
-    double curDx = (this.customTextBox.fontHeight / 10) + this.customTextBox.dx;
-    ctx.moveTo(curDx, this.customTextBox.fontHeight / 10);
-    ctx.lineTo(curDx, 1.2 * this.customTextBox.fontHeight);
+    ctx.setLineCap(LineCap.BUTT);
+
+    double curDx = customTextBox.dx;
+    ctx.moveTo(curDx, customTextBox.fontHeight / 10);
+    ctx.lineTo(curDx, 1.2 * customTextBox.fontHeight);
+
     ctx.stroke();
   }
 

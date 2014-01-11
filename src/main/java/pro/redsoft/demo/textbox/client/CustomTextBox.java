@@ -50,17 +50,20 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
       item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
       Context2d itemContext = item.getContext2d();
       itemContext.save();
+      int y = 1;
       if (!isNumber(symbol)) {
         itemContext.setTextBaseline(TextBaseline.BOTTOM);
+      } else {
+        y = -1;
       }
       itemContext.setFont(fontHeight + "pt " + fontName);
       itemContext.translate(0, fontHeight);
       itemContext.scale(1, -1);
-      itemContext.fillText(symbol + "", 0, fontHeight);
+      itemContext.fillText(symbol + "", 0, fontHeight + y);
       itemContext.restore();
-      doDrawImage(context, itemContext.getCanvas(), dx, 0);
 
       // draw, then update dx
+      context.drawImage(itemContext.getCanvas(), dx, 0);
       updateIndex(itemContext, symbol);
     }
   }
@@ -77,20 +80,14 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
       Context2d itemContext = item.getContext2d();
       itemContext.save();
       itemContext.setFont(fontHeight + "pt " + fontName);
-
       itemContext.translate(0, fontHeight);
       itemContext.fillText(symbol + "", 0, 0);
-
       itemContext.restore();
-      doDrawImage(context, itemContext.getCanvas(), dx, 0);
 
       // draw, then update dx
+      context.drawImage(itemContext.getCanvas(), dx, 0);
       updateIndex(itemContext, symbol);
     }
-  }
-
-  void doDrawImage(Context2d ctx, CanvasElement image, double dx, double dy) {
-    ctx.drawImage(image, dx, dy);
   }
 
   @Override

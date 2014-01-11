@@ -40,6 +40,10 @@ class CursorAnimation extends Animation {
     ctx.setLineCap(LineCap.BUTT);
 
     double curDx = customTextBox.dx;
+    if (curDx == 0) {
+      curDx = customTextBox.fontHeight / 10;
+    }
+
     ctx.moveTo(curDx, customTextBox.fontHeight / 10);
     ctx.lineTo(curDx, 1.2 * customTextBox.fontHeight);
 

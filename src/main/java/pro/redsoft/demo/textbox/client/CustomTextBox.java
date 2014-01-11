@@ -8,12 +8,15 @@ import com.google.gwt.canvas.dom.client.Context2d.TextAlign;
 import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
+import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FocusPanel;
 
 /**
@@ -48,15 +51,15 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
       item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
       Context2d itemContext = item.getContext2d();
       itemContext.save();
-      int y = -font / 5;
+      double y = -fontHeight / 5;
       if (!isNumber(symbol)) {
         itemContext.setTextBaseline(TextBaseline.BOTTOM);
-        y = -font / 11;
+        y = -fontHeight / 11;
       }
-      itemContext.setFont(font + "pt " + fontName);
-      itemContext.translate(0, font);
+      itemContext.setFont(fontHeight + "pt " + fontName);
+      itemContext.translate(0, fontHeight);
       itemContext.scale(1, -1);
-      itemContext.fillText(symbol + "", 0, font + y);
+      itemContext.fillText(symbol + "", 0, fontHeight + y);
 
       itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
@@ -72,21 +75,32 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
   private class OddKeyProcessingStrategy implements KeyProcessingStrategy {
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
       Canvas item = Canvas.createIfSupported();
       Context2d itemContext = item.getContext2d();
       itemContext.save();
-      itemContext.setFont(font + "pt " + fontName);
-      itemContext.translate(0, font);
+      itemContext.setFont(fontHeight + "pt " + fontName);
+      itemContext.translate(0, fontHeight);
       itemContext.fillText(symbol + "", 0, 0);
       itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
-
       updateIndex(itemContext, symbol);
+    }
+  }
+
+  @Override
+  public void onBrowserEvent(Event event) {
+    super.onBrowserEvent(event);
+    switch (event.getTypeInt()) {
+
+    case Event.ONFOCUS:
+      cursorTimer.scheduleRepeating(1000);
+      break;
+
+    case Event.ONBLUR:
+      cursorTimer.cancel();
+      break;
     }
   }
 
@@ -107,16 +121,23 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
   }
 
   private StringBuilder textBuilder = new StringBuilder();
-
   private final StrategyProvider provider = new StrategyProvider();
+  private final CursorAnimation animation = new CursorAnimation(this);
+  private final Timer cursorTimer = new Timer() {
+
+    @Override
+    public void run() {
+      animation.run(1000);
+    }
+  };
 
   Canvas canvas = Canvas.createIfSupported();
 
   Context2d context = canvas.getContext2d();
   StringBuilder currentText = new StringBuilder();
 
-  private double dx = 0;
-  int font = 0;
+  double dx = 0;
+  double fontHeight = 0;
 
   String fontName = Font.Monospace.getFontName();
 
@@ -128,9 +149,12 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     getElement().getStyle().setBorderColor("black");
     getElement().getStyle().setBorderWidth(1., Unit.PX);
 
+    getElement().getStyle().setCursor(Cursor.TEXT);
+
     // Note: It’s best to use vector fonts when scaling or rotating text,
     // because bitmapped fonts can appear jagged when scaled up or rotated.
     setSize("300px", "30px");
+    sinkEvents(Event.FOCUSEVENTS);
   }
 
   private void initContext(String font) {
@@ -150,12 +174,13 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
   @Override
   public void onChangeSettings(FontSettings settings) {
-
     CanvasElement elem = canvas.getCanvasElement();
+    context.save();
     context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
     fontName = settings.getFont().getFontName();
-    initContext(font + "pt " + fontName);
+    initContext(fontHeight + "pt " + fontName);
     setText(textBuilder.toString());
+    context.restore();
   }
 
   void registerHandlers() {
@@ -182,21 +207,27 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     });
   }
 
+  private int maxWidth, maxHeight;
+
   @Override
   public void setSize(String width, String height) {
 
-    canvas.setWidth(width);
-    canvas.setHeight(height);
+    int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
+    int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
+    fontHeight = (int) (0.95 * h);
 
-    int x = Integer.valueOf(width.substring(0, width.indexOf("px")));
-    int y = Integer.valueOf(height.substring(0, height.indexOf("px")));
+    h *= 1.2;
 
-    canvas.setCoordinateSpaceWidth(x);
-    canvas.setCoordinateSpaceHeight(y);
+    canvas.setWidth(w + "px");
+    canvas.setHeight(h + "px");
 
-    font = (int) (0.9 * y);
+    maxWidth = w;
+    maxHeight = h;
 
-    initContext(font + "pt " + fontName);
+    canvas.setCoordinateSpaceWidth(maxWidth);
+    canvas.setCoordinateSpaceHeight(maxHeight);
+
+    initContext(fontHeight + "pt " + fontName);
   }
 
   public void setText(String text) {
@@ -208,6 +239,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
   }
 
   private void updateIndex(Context2d context, char symbol) {
-    dx += font;
+    dx += fontHeight * 0.9;
+    animation.updatePosition();
   }
 }

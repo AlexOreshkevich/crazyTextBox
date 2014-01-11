@@ -43,7 +43,7 @@ class CursorAnimation extends Animation {
     if (curDx == 0) {
       curDx = customTextBox.fontHeight / 10;
     } else {
-
+      curDx -= customTextBox.fontHeight / 9;
     }
 
     ctx.moveTo(curDx, customTextBox.fontHeight / 10);

@@ -4,11 +4,14 @@ import pro.redsoft.demo.textbox.client.FontSettings.Font;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -54,6 +57,20 @@ public class SettingsPanel extends Composite {
 
     // set first font as default
     fontSettings.setFont(Font.valueOf(fontSelector.getItemText(0)));
+
+    // selector for font size
+    Label fontSizeLabel = new Label("Select font size");
+    TextBox fontSizeSelector = new TextBox();
+    addWidget(fontSizeLabel, fontSizeSelector);
+    fontSizeSelector.addValueChangeHandler(new ValueChangeHandler<String>() {
+
+      @Override
+      public void onValueChange(ValueChangeEvent<String> event) {
+        fontSettings.setFontSize(event.getValue());
+        SettingsPanel.this.onValueChange();
+      }
+    });
+    fontSizeSelector.setText("40");
   }
 
   private void addWidget(Widget label, Widget selector) {

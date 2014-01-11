@@ -7,6 +7,7 @@ import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
@@ -46,28 +47,25 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
 
-      // create partitional canvas and initialize context
       Canvas item = Canvas.createIfSupported();
+      item.setWidth("50px");
+      item.setHeight("50px");
+      item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
       Context2d itemContext = item.getContext2d();
-
-      // load settings from parent context
-      itemContext.setFont(context.getFont());
-      itemContext.setFillStyle(context.getFillStyle());
-      itemContext.setTextAlign(TextAlign.LEFT);
-      itemContext.setTextBaseline(TextBaseline.BOTTOM);
-
-      // rotate text following recommendations from
-      // https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/HTML-canvas-guide/AddingText/AddingText.html
       itemContext.save();
+      int y = 0;
+      if (!isNumber(symbol)) {
+        itemContext.setTextBaseline(TextBaseline.BOTTOM);
+        y = font / 11;
+      }
+      itemContext.setFont(font + "pt " + fontName);
+      itemContext.translate(0, 60);
       itemContext.scale(1, -1);
-      itemContext.fillText(symbol + "", 0, 0);
-      itemContext.restore();
-
-      // update current dx
+      itemContext.fillText(symbol + "", 0, font + y);
       updateIndex(itemContext, symbol);
-
-      // draw symbol as image from rotated source-symbol
+      itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
+
     }
   }
 
@@ -78,13 +76,23 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
      */
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
+      Canvas item = Canvas.createIfSupported();
+      item.setWidth("50px");
+      item.setHeight("50px");
+      Context2d itemContext = item.getContext2d();
+      itemContext.save();
+      itemContext.setFont(font + "pt " + fontName);
+      itemContext.translate(0, 60);
+      itemContext.fillText(symbol + "", 0, 0);
+      updateIndex(itemContext, symbol);
+      itemContext.restore();
+      context.drawImage(itemContext.getCanvas(), dx, 0);
 
-      // update current dx
-      updateIndex(context, symbol);
-
-      // draw symbol as usually
-      context.fillText(symbol + "", dx, 0);
     }
+  }
+
+  private boolean isNumber(char c) {
+    return ((c) >= 49) && ((c) <= 59);
   }
 
   private StringBuilder textBuilder = new StringBuilder();
@@ -123,8 +131,6 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
     getElement().getStyle().setBorderColor("black");
     getElement().getStyle().setBorderWidth(1., Unit.PX);
-    getElement().getStyle().setPadding(5., Unit.PX);
-    getElement().getStyle().setPaddingTop(40., Unit.PX);
 
     // Note: It’s best to use vector fonts when scaling or rotating text,
     // because bitmapped fonts can appear jagged when scaled up or rotated.
@@ -142,6 +148,9 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     context.setTextBaseline(TextBaseline.TOP);
   }
 
+  int font = 40;
+  String fontName = "Monospace";
+
   @Override
   public void onChangeSettings(FontSettings settings) {
 
@@ -149,10 +158,10 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
     context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
 
-    String font = settings.getFontSize() + " "
-        + settings.getFont().getFontName();
+    fontName = settings.getFont().getFontName();
+    font = Integer.valueOf(settings.getFontSize());
 
-    initContext(font);
+    initContext(font + "pt " + fontName);
 
     setText(textBuilder.toString());
   }

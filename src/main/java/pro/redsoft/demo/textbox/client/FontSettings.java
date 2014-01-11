@@ -32,7 +32,7 @@ public class FontSettings {
 
   public FontSettings() {
     font = Font.Arial;
-    fontSize = "20pt";
+    fontSize = "40";
     textAlign = TextAlign.LEFT;
     fillStyle = "black";
     textBaseline = TextBaseline.TOP;

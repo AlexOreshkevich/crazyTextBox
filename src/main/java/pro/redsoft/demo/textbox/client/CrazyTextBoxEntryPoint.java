@@ -18,7 +18,7 @@ public class CrazyTextBoxEntryPoint implements EntryPoint {
   public void onModuleLoad() {
 
     textBox.setSize("600px", "30px");
-    // textBox.setText("abcdefghwxyz 123456");
+    textBox.setText("abcdefghwxyz 123456");
 
     // init settingsPanel
     SettingsPanel settingsPanel = new SettingsPanel();

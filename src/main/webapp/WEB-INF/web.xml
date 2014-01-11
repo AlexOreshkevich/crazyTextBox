@@ -7,19 +7,9 @@
 
 	<!-- Servlets -->
 	<servlet>
-		<servlet-name>greetServlet</servlet-name>
-		<servlet-class>pro.redsoft.demo.textbox.server.GreetingServiceImpl</servlet-class>
-	</servlet>
-
-	<servlet>
 		<servlet-name>jUnitHostImpl</servlet-name>
 		<servlet-class>com.google.gwt.junit.server.JUnitHostImpl</servlet-class>
 	</servlet>
-
-	<servlet-mapping>
-		<servlet-name>greetServlet</servlet-name>
-		<url-pattern>/CrazyTextBox/greet</url-pattern>
-	</servlet-mapping>
 
 	<servlet-mapping>
 		<servlet-name>jUnitHostImpl</servlet-name>

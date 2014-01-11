@@ -55,9 +55,10 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 			itemContext.setTextBaseline(TextBaseline.BOTTOM);
 		}else{
 			y=-1;
+			/*for courier*/y = -2;/*for courier*/
 		}
-		itemContext.setFont(fontHeight + "pt " + fontName);
-		itemContext.translate(0, fontHeight);
+			itemContext.setFont(fontHeight + "pt " + fontName);
+		itemContext.translate(0, fontHeight/*for courier*/ + 3/*for courier*/);
 		itemContext.scale(1, -1);
 		itemContext.fillText(symbol + "", 0, fontHeight+y);
 		itemContext.restore();

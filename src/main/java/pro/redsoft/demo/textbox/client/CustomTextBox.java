@@ -46,22 +46,23 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
      */
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
-      Canvas item = Canvas.createIfSupported();
-      item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
-      Context2d itemContext = item.getContext2d();
-      itemContext.save();
-      if (!isNumber(symbol)) {
-        itemContext.setTextBaseline(TextBaseline.BOTTOM);
-      }
-      itemContext.setFont(fontHeight + "pt " + fontName);
-      itemContext.translate(0, fontHeight);
-      itemContext.scale(1, -1);
-      itemContext.fillText(symbol + "", 0, fontHeight);
-      itemContext.restore();
-      doDrawImage(context, itemContext.getCanvas(), dx, 0);
-
-      // draw, then update dx
-      updateIndex(itemContext, symbol);
+    	Canvas item = Canvas.createIfSupported();
+		item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
+		Context2d itemContext = item.getContext2d();
+		itemContext.save();
+		int y = 1;
+		if (!isNumber(symbol)) {
+			itemContext.setTextBaseline(TextBaseline.BOTTOM);
+		}else{
+			y=-1;
+		}
+		itemContext.setFont(fontHeight + "pt " + fontName);
+		itemContext.translate(0, fontHeight);
+		itemContext.scale(1, -1);
+		itemContext.fillText(symbol + "", 0, fontHeight+y);
+		itemContext.restore();
+		context.drawImage(itemContext.getCanvas(), dx, 0);
+			updateIndex(itemContext, symbol);
     }
   }
 
@@ -73,19 +74,15 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
-      Canvas item = Canvas.createIfSupported();
-      Context2d itemContext = item.getContext2d();
-      itemContext.save();
-      itemContext.setFont(fontHeight + "pt " + fontName);
-
-      itemContext.translate(0, fontHeight);
-      itemContext.fillText(symbol + "", 0, 0);
-
-      itemContext.restore();
-      doDrawImage(context, itemContext.getCanvas(), dx, 0);
-
-      // draw, then update dx
-      updateIndex(itemContext, symbol);
+    	Canvas item = Canvas.createIfSupported();
+		Context2d itemContext = item.getContext2d();
+		itemContext.save();
+		itemContext.setFont(fontHeight + "pt " + fontName);
+		itemContext.translate(0, fontHeight);
+		itemContext.fillText(symbol + "", 0, 0);
+		itemContext.restore();
+		context.drawImage(itemContext.getCanvas(), dx, 0);
+		updateIndex(itemContext, symbol);
     }
   }
 

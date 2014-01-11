@@ -194,7 +194,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     canvas.setCoordinateSpaceWidth(x);
     canvas.setCoordinateSpaceHeight(y);
 
-    font = (int) (0.9 * y);
+    font = (int) (0.6 * y);
 
     initContext(font + "pt " + fontName);
   }

@@ -11,8 +11,7 @@ import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 public class FontSettings {
 
   public enum Font {
-    Courier, Georgia, Tahoma("Tahoma, Geneva, sans-serif"), Console(
-        "Lucida Console"), Monaco, Arial, Helvetica;
+    Arial, Console("Lucida Console"), Monospace, Helvetica, Courier;
 
     /** Enum id and actual font string representation may be different. */
     private String name;
@@ -31,8 +30,7 @@ public class FontSettings {
   }
 
   public FontSettings() {
-    font = Font.Arial;
-    fontSize = "40";
+    font = Font.Monospace;
     textAlign = TextAlign.LEFT;
     fillStyle = "black";
     textBaseline = TextBaseline.TOP;
@@ -44,14 +42,6 @@ public class FontSettings {
 
   public void setFont(Font font) {
     this.font = font;
-  }
-
-  public String getFontSize() {
-    return fontSize;
-  }
-
-  public void setFontSize(String fontSize) {
-    this.fontSize = fontSize;
   }
 
   public TextAlign getTextAlign() {
@@ -79,7 +69,6 @@ public class FontSettings {
   }
 
   private Font font;
-  private String fontSize;
   private TextAlign textAlign;
   private String fillStyle;
   private TextBaseline textBaseline;

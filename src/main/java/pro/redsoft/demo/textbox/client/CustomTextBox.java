@@ -1,5 +1,7 @@
 package pro.redsoft.demo.textbox.client;
 
+import pro.redsoft.demo.textbox.client.FontSettings.Font;
+
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.canvas.dom.client.Context2d.TextAlign;
@@ -32,11 +34,6 @@ import com.google.gwt.user.client.ui.FocusPanel;
  */
 public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
-  private interface KeyProcessingStrategy {
-
-    void addChar(char symbol, Canvas canvas, Context2d context);
-  }
-
   private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
 
     /**
@@ -48,25 +45,29 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     public void addChar(char symbol, Canvas canvas, Context2d context) {
 
       Canvas item = Canvas.createIfSupported();
-      item.setWidth("50px");
-      item.setHeight("50px");
       item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
       Context2d itemContext = item.getContext2d();
       itemContext.save();
-      int y = 0;
+      int y = -font / 5;
       if (!isNumber(symbol)) {
         itemContext.setTextBaseline(TextBaseline.BOTTOM);
-        y = font / 11;
+        y = -font / 11;
       }
       itemContext.setFont(font + "pt " + fontName);
-      itemContext.translate(0, 60);
+      itemContext.translate(0, font);
       itemContext.scale(1, -1);
       itemContext.fillText(symbol + "", 0, font + y);
-      updateIndex(itemContext, symbol);
+
       itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
 
+      updateIndex(itemContext, symbol);
     }
+  }
+
+  private interface KeyProcessingStrategy {
+
+    void addChar(char symbol, Canvas canvas, Context2d context);
   }
 
   private class OddKeyProcessingStrategy implements KeyProcessingStrategy {
@@ -77,25 +78,17 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
       Canvas item = Canvas.createIfSupported();
-      item.setWidth("50px");
-      item.setHeight("50px");
       Context2d itemContext = item.getContext2d();
       itemContext.save();
       itemContext.setFont(font + "pt " + fontName);
-      itemContext.translate(0, 60);
+      itemContext.translate(0, font);
       itemContext.fillText(symbol + "", 0, 0);
-      updateIndex(itemContext, symbol);
       itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
 
+      updateIndex(itemContext, symbol);
     }
   }
-
-  private boolean isNumber(char c) {
-    return ((c) >= 49) && ((c) <= 59);
-  }
-
-  private StringBuilder textBuilder = new StringBuilder();
 
   private class StrategyProvider {
 
@@ -104,25 +97,28 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
     int cntr = 0;
 
-    void init() {
-      cntr = 0;
-    }
-
     KeyProcessingStrategy getStrategy() {
       return (++cntr % 2) == 0 ? evenStrategy : oddStrategy;
     }
+
+    void init() {
+      cntr = 0;
+    }
   }
+
+  private StringBuilder textBuilder = new StringBuilder();
 
   private final StrategyProvider provider = new StrategyProvider();
 
   Canvas canvas = Canvas.createIfSupported();
-  Context2d context = canvas.getContext2d();
 
+  Context2d context = canvas.getContext2d();
   StringBuilder currentText = new StringBuilder();
 
-  // int symbolHeight = 25;
-
   private double dx = 0;
+  int font = 0;
+
+  String fontName = Font.Monospace.getFontName();
 
   CustomTextBox() {
     setWidget(canvas);
@@ -134,13 +130,13 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
     // Note: It’s best to use vector fonts when scaling or rotating text,
     // because bitmapped fonts can appear jagged when scaled up or rotated.
-    initContext("20pt Monaco");
+    setSize("300px", "30px");
   }
 
   private void initContext(String font) {
 
-    provider.init();
     dx = 0;
+    provider.init();
 
     context.setFont(font);
     context.setTextAlign(TextAlign.LEFT);
@@ -148,33 +144,18 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     context.setTextBaseline(TextBaseline.TOP);
   }
 
-  int font = 40;
-  String fontName = "Monospace";
+  private boolean isNumber(char c) {
+    return ((c) >= 49) && ((c) <= 59);
+  }
 
   @Override
   public void onChangeSettings(FontSettings settings) {
 
     CanvasElement elem = canvas.getCanvasElement();
-
     context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-
     fontName = settings.getFont().getFontName();
-    font = Integer.valueOf(settings.getFontSize());
-
     initContext(font + "pt " + fontName);
-
     setText(textBuilder.toString());
-  }
-
-  @Override
-  public void setSize(String width, String height) {
-    super.setSize(width, height);
-    canvas.setWidth(width + "px");
-    canvas.setHeight(height + "px");
-  }
-
-  private void updateIndex(Context2d context, char symbol) {
-    dx += context.measureText(symbol + "").getWidth();
   }
 
   void registerHandlers() {
@@ -201,11 +182,32 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     });
   }
 
+  @Override
+  public void setSize(String width, String height) {
+
+    canvas.setWidth(width);
+    canvas.setHeight(height);
+
+    int x = Integer.valueOf(width.substring(0, width.indexOf("px")));
+    int y = Integer.valueOf(height.substring(0, height.indexOf("px")));
+
+    canvas.setCoordinateSpaceWidth(x);
+    canvas.setCoordinateSpaceHeight(y);
+
+    font = (int) (0.9 * y);
+
+    initContext(font + "pt " + fontName);
+  }
+
   public void setText(String text) {
     for (char symbol : text.toCharArray()) {
       provider.getStrategy().addChar(symbol, canvas, context);
     }
     textBuilder = new StringBuilder();
     textBuilder.append(text);
+  }
+
+  private void updateIndex(Context2d context, char symbol) {
+    dx += font;
   }
 }

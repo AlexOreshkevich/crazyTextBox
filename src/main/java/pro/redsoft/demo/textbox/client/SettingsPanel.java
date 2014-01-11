@@ -1,17 +1,19 @@
 package pro.redsoft.demo.textbox.client;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import pro.redsoft.demo.textbox.client.FontSettings.Font;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DecoratorPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -39,8 +41,14 @@ public class SettingsPanel extends Composite {
     // label and widget for font selections
     Label fontLabel = new Label("Select font");
     final ListBox fontSelector = new ListBox(false);
-    for (Font font : FontSettings.Font.values()) {
-      fontSelector.addItem(font.toString());
+    List<Font> fonts = Arrays.asList(FontSettings.Font.values());
+    List<String> fontNames = new ArrayList<String>();
+    for (Font font : fonts) {
+      fontNames.add(font.toString());
+    }
+    Collections.sort(fontNames);
+    for (String font : fontNames) {
+      fontSelector.addItem(font);
     }
     addWidget(fontLabel, fontSelector);
 
@@ -57,20 +65,7 @@ public class SettingsPanel extends Composite {
 
     // set first font as default
     fontSettings.setFont(Font.valueOf(fontSelector.getItemText(0)));
-
-    // selector for font size
-    Label fontSizeLabel = new Label("Select font size");
-    TextBox fontSizeSelector = new TextBox();
-    addWidget(fontSizeLabel, fontSizeSelector);
-    fontSizeSelector.addValueChangeHandler(new ValueChangeHandler<String>() {
-
-      @Override
-      public void onValueChange(ValueChangeEvent<String> event) {
-        fontSettings.setFontSize(event.getValue());
-        SettingsPanel.this.onValueChange();
-      }
-    });
-    fontSizeSelector.setText("40");
+    onValueChange();
   }
 
   private void addWidget(Widget label, Widget selector) {

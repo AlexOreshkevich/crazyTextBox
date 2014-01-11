@@ -37,230 +37,229 @@ import com.google.gwt.user.client.ui.FocusPanel;
  */
 public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
-  private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
+	private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
 
-    /**
-     * Every letter at an even position is shown turned upside down.
-     * 
-     * @inheritDoc
-     */
-    @Override
-    public void addChar(char symbol, Canvas canvas, Context2d context) {
-    	Canvas item = Canvas.createIfSupported();
-		item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
-		Context2d itemContext = item.getContext2d();
-		itemContext.save();
-		int y = 1;
-		if (!isNumber(symbol)) {
-			itemContext.setTextBaseline(TextBaseline.BOTTOM);
-		}else{
-			y=-1;
-			/*for courier*/y = -2;/*for courier*/
-		}
+		/**
+		 * Every letter at an even position is shown turned upside down.
+		 * 
+		 * @inheritDoc
+		 */
+		@Override
+		public void addChar(char symbol, Canvas canvas, Context2d context) {
+			Canvas item = Canvas.createIfSupported();
+			item.getElement().getStyle().setVerticalAlign(VerticalAlign.TOP);
+			Context2d itemContext = item.getContext2d();
+			itemContext.save();
+			int y = 1;
+			if (!isNumber(symbol)) {
+				itemContext.setTextBaseline(TextBaseline.BOTTOM);
+			} else {
+				y = -1;
+				/* for courier */y = -2;/* for courier */
+			}
 			itemContext.setFont(fontHeight + "pt " + fontName);
-		itemContext.translate(0, fontHeight/*for courier*/ + 3/*for courier*/);
-		itemContext.scale(1, -1);
-		itemContext.fillText(symbol + "", 0, fontHeight+y);
-		itemContext.restore();
-		context.drawImage(itemContext.getCanvas(), dx, 0);
+			itemContext.translate(0, fontHeight/* for courier */+ 3/*
+																	 * for
+																	 * courier
+																	 */);
+			itemContext.scale(1, -1);
+			itemContext.fillText(symbol + "", 0, fontHeight + y);
+			itemContext.restore();
+			context.drawImage(itemContext.getCanvas(), dx, 0);
 			updateIndex(itemContext, symbol);
-    }
-  }
+		}
+	}
 
-  private interface KeyProcessingStrategy {
-    void addChar(char symbol, Canvas canvas, Context2d context);
-  }
+	private interface KeyProcessingStrategy {
+		void addChar(char symbol, Canvas canvas, Context2d context);
+	}
 
-  private class OddKeyProcessingStrategy implements KeyProcessingStrategy {
+	private class OddKeyProcessingStrategy implements KeyProcessingStrategy {
 
-    @Override
-    public void addChar(char symbol, Canvas canvas, Context2d context) {
-    	Canvas item = Canvas.createIfSupported();
-		Context2d itemContext = item.getContext2d();
-		itemContext.save();
-		itemContext.setFont(fontHeight + "pt " + fontName);
-		itemContext.translate(0, fontHeight);
-		itemContext.fillText(symbol + "", 0, 0);
-		itemContext.restore();
-		context.drawImage(itemContext.getCanvas(), dx, 0);
-		updateIndex(itemContext, symbol);
-    }
-  }
+		@Override
+		public void addChar(char symbol, Canvas canvas, Context2d context) {
+			Canvas item = Canvas.createIfSupported();
+			Context2d itemContext = item.getContext2d();
+			itemContext.save();
+			itemContext.setFont(fontHeight + "pt " + fontName);
+			itemContext.translate(0, fontHeight);
+			itemContext.fillText(symbol + "", 0, 0);
+			itemContext.restore();
+			context.drawImage(itemContext.getCanvas(), dx, 0);
+			updateIndex(itemContext, symbol);
+		}
+	}
 
-  void doDrawImage(Context2d ctx, CanvasElement image, double dx, double dy) {
-    ctx.drawImage(image, dx, dy);
-  }
+	@Override
+	public void onBrowserEvent(Event event) {
+		super.onBrowserEvent(event);
+		switch (event.getTypeInt()) {
 
-  @Override
-  public void onBrowserEvent(Event event) {
-    super.onBrowserEvent(event);
-    switch (event.getTypeInt()) {
+		case Event.ONFOCUS:
+			cursorTimer.scheduleRepeating(1000);
+			break;
 
-    case Event.ONFOCUS:
-      cursorTimer.scheduleRepeating(1000);
-      break;
+		case Event.ONBLUR:
+			cursorTimer.cancel();
+			break;
+		}
+	}
 
-    case Event.ONBLUR:
-      cursorTimer.cancel();
-      break;
-    }
-  }
+	private class StrategyProvider {
 
-  private class StrategyProvider {
+		KeyProcessingStrategy evenStrategy = new EvenKeyProcessingStrategy();
+		KeyProcessingStrategy oddStrategy = new OddKeyProcessingStrategy();
 
-    KeyProcessingStrategy evenStrategy = new EvenKeyProcessingStrategy();
-    KeyProcessingStrategy oddStrategy = new OddKeyProcessingStrategy();
+		int cntr = 0;
 
-    int cntr = 0;
+		KeyProcessingStrategy getStrategy() {
+			return (++cntr % 2) == 0 ? evenStrategy : oddStrategy;
+		}
 
-    KeyProcessingStrategy getStrategy() {
-      return (++cntr % 2) == 0 ? evenStrategy : oddStrategy;
-    }
+		void init() {
+			cntr = 0;
+		}
+	}
 
-    void init() {
-      cntr = 0;
-    }
-  }
+	private StringBuilder textBuilder = new StringBuilder();
+	private final StrategyProvider provider = new StrategyProvider();
+	private final CursorAnimation animation = new CursorAnimation(this);
+	private final Timer cursorTimer = new Timer() {
 
-  private StringBuilder textBuilder = new StringBuilder();
-  private final StrategyProvider provider = new StrategyProvider();
-  private final CursorAnimation animation = new CursorAnimation(this);
-  private final Timer cursorTimer = new Timer() {
+		@Override
+		public void run() {
+			animation.run(1000);
+		}
+	};
 
-    @Override
-    public void run() {
-      animation.run(1000);
-    }
-  };
+	Canvas canvas = Canvas.createIfSupported();
 
-  Canvas canvas = Canvas.createIfSupported();
+	Context2d context = canvas.getContext2d();
+	StringBuilder currentText = new StringBuilder();
 
-  Context2d context = canvas.getContext2d();
-  StringBuilder currentText = new StringBuilder();
+	double dx = 0;
+	int fontHeight = 0;
 
-  double dx = 0;
-  int fontHeight = 0;
+	String fontName = Font.Monospace.getFontName();
 
-  String fontName = Font.Monospace.getFontName();
+	CustomTextBox() {
+		setWidget(canvas);
+		registerHandlers();
 
-  CustomTextBox() {
-    setWidget(canvas);
-    registerHandlers();
+		getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
+		getElement().getStyle().setBorderColor("black");
+		getElement().getStyle().setBorderWidth(1., Unit.PX);
 
-    getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
-    getElement().getStyle().setBorderColor("black");
-    getElement().getStyle().setBorderWidth(1., Unit.PX);
+		getElement().getStyle().setCursor(Cursor.TEXT);
 
-    getElement().getStyle().setCursor(Cursor.TEXT);
+		// Note: It’s best to use vector fonts when scaling or rotating text,
+		// because bitmapped fonts can appear jagged when scaled up or rotated.
+		setSize("300px", "30px");
+		sinkEvents(Event.FOCUSEVENTS);
+	}
 
-    // Note: It’s best to use vector fonts when scaling or rotating text,
-    // because bitmapped fonts can appear jagged when scaled up or rotated.
-    setSize("300px", "30px");
-    sinkEvents(Event.FOCUSEVENTS);
-  }
+	private void initContext(String font) {
 
-  private void initContext(String font) {
+		resetInd();
 
-    resetInd();
+		context.setFont(font);
+		context.setTextAlign(TextAlign.LEFT);
+		context.setFillStyle("black");
+		context.setTextBaseline(TextBaseline.TOP);
+	}
 
-    context.setFont(font);
-    context.setTextAlign(TextAlign.LEFT);
-    context.setFillStyle("black");
-    context.setTextBaseline(TextBaseline.TOP);
-  }
+	void resetInd() {
+		dx = 0;
+		provider.init();
+	}
 
-  void resetInd() {
-    dx = 0;
-    provider.init();
-  }
+	private boolean isNumber(char c) {
+		return ((c) >= 49) && ((c) <= 59);
+	}
 
-  private boolean isNumber(char c) {
-    return ((c) >= 49) && ((c) <= 59);
-  }
+	@Override
+	public void onChangeSettings(FontSettings settings) {
+		CanvasElement elem = canvas.getCanvasElement();
+		context.save();
+		context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
+		fontName = settings.getFont().getFontName();
+		initContext(fontHeight + "pt " + fontName);
+		setText(textBuilder.toString());
+		context.restore();
+	}
 
-  @Override
-  public void onChangeSettings(FontSettings settings) {
-    CanvasElement elem = canvas.getCanvasElement();
-    context.save();
-    context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-    fontName = settings.getFont().getFontName();
-    initContext(fontHeight + "pt " + fontName);
-    setText(textBuilder.toString());
-    context.restore();
-  }
+	void registerHandlers() {
 
-  void registerHandlers() {
+		addDomHandler(new ClickHandler() {
 
-    addDomHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				setFocus(true);
+			}
+		}, ClickEvent.getType());
 
-      @Override
-      public void onClick(ClickEvent event) {
-        setFocus(true);
-      }
-    }, ClickEvent.getType());
+		addKeyPressHandler(new KeyPressHandler() {
 
-    addKeyPressHandler(new KeyPressHandler() {
+			@Override
+			public void onKeyPress(KeyPressEvent event) {
 
-      @Override
-      public void onKeyPress(KeyPressEvent event) {
+				if (event.isAnyModifierKeyDown()) {
+					return;
+				}
 
-        if (event.isAnyModifierKeyDown()) {
-          return;
-        }
+				// remove last char
+				if (event.getCharCode() == 0) {
+					CanvasElement elem = canvas.getCanvasElement();
+					context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
+					String word = textBuilder.toString();
+					setText(word.substring(0, word.length() - 1));
+					event.preventDefault();
+					return;
+				}
 
-        // remove last char
-        if (event.getCharCode() == 0) {
-          CanvasElement elem = canvas.getCanvasElement();
-          context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-          String word = textBuilder.toString();
-          setText(word.substring(0, word.length() - 1));
-          event.preventDefault();
-          return;
-        }
+				char symbol = event.getCharCode();
 
-        char symbol = event.getCharCode();
+				// choose and execute strategy
+				provider.getStrategy().addChar(symbol, canvas, context);
+				textBuilder.append(symbol);
+			}
+		});
+	}
 
-        // choose and execute strategy
-        provider.getStrategy().addChar(symbol, canvas, context);
-        textBuilder.append(symbol);
-      }
-    });
-  }
+	private int maxWidth, maxHeight;
 
-  private int maxWidth, maxHeight;
+	@Override
+	public void setSize(String width, String height) {
 
-  @Override
-  public void setSize(String width, String height) {
+		int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
+		int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
+		fontHeight = (int) (0.95 * h);
 
-    int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
-    int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
-    fontHeight = (int) (0.95 * h);
+		h *= 1.2;
 
-    h *= 1.2;
+		canvas.setWidth(w + "px");
+		canvas.setHeight(h + "px");
 
-    canvas.setWidth(w + "px");
-    canvas.setHeight(h + "px");
+		maxWidth = w;
+		maxHeight = h;
 
-    maxWidth = w;
-    maxHeight = h;
+		canvas.setCoordinateSpaceWidth(maxWidth);
+		canvas.setCoordinateSpaceHeight(maxHeight);
 
-    canvas.setCoordinateSpaceWidth(maxWidth);
-    canvas.setCoordinateSpaceHeight(maxHeight);
+		initContext(fontHeight + "pt " + fontName);
+	}
 
-    initContext(fontHeight + "pt " + fontName);
-  }
+	public void setText(String text) {
+		resetInd();
+		for (char symbol : text.toCharArray()) {
+			provider.getStrategy().addChar(symbol, canvas, context);
+		}
+		textBuilder = new StringBuilder();
+		textBuilder.append(text);
+	}
 
-  public void setText(String text) {
-    resetInd();
-    for (char symbol : text.toCharArray()) {
-      provider.getStrategy().addChar(symbol, canvas, context);
-    }
-    textBuilder = new StringBuilder();
-    textBuilder.append(text);
-  }
-
-  private void updateIndex(Context2d context, char symbol) {
-    dx += fontHeight * 0.9;
-    animation.updatePosition();
-  }
+	private void updateIndex(Context2d context, char symbol) {
+		dx += fontHeight * 0.95;
+		animation.updatePosition();
+	}
 }

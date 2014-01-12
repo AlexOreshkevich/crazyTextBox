@@ -8,11 +8,6 @@ import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.event.dom.client.KeyPressHandler;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FocusPanel;
 
 /**
@@ -42,17 +37,17 @@ public class CustomTextBox extends FocusPanel {
   // Note: It’s best to use vector fonts when scaling or rotating text,
   // because bitmapped fonts can appear jagged when scaled up or rotated.
   private final String fontName = "Courier";
-  private final SelectionHandler selectionHandler = new SelectionHandler(this);
+
+  private interface KeyProcessingStrategy {
+    void addChar(char symbol, Canvas canvas, Context2d context);
+  }
 
   private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
 
-    /**
-     * Every letter at an even position is shown turned upside down.
-     * 
-     * @inheritDoc
-     */
     @Override
     public void addChar(char symbol, Canvas canvas, Context2d context) {
+
+      // Every letter at an even position is shown turned upside down.
 
       Context2d itemContext = buildItemContext();
       animation.removeCursor(dx);
@@ -62,23 +57,16 @@ public class CustomTextBox extends FocusPanel {
       if (!isNumber(symbol)) {
         itemContext.setTextBaseline(TextBaseline.BOTTOM);
       } else {
-        y = -1;
-        /* for courier */y = -2;/* for courier */
+        y = -2;
       }
 
-      itemContext.translate(0, fontHeight/* for courier */+ 3/*
-                                                              * for courier
-                                                              */);
+      itemContext.translate(0, fontHeight + 3);
       itemContext.scale(1, -1);
       itemContext.fillText(symbol + "", 0, fontHeight + y);
       itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
-      updateIndex(itemContext, symbol);
+      updateIndex();
     }
-  }
-
-  private interface KeyProcessingStrategy {
-    void addChar(char symbol, Canvas canvas, Context2d context);
   }
 
   private class OddKeyProcessingStrategy implements KeyProcessingStrategy {
@@ -94,7 +82,7 @@ public class CustomTextBox extends FocusPanel {
       itemContext.fillText(symbol + "", 0, 0);
       itemContext.restore();
       context.drawImage(itemContext.getCanvas(), dx, 0);
-      updateIndex(itemContext, symbol);
+      updateIndex();
     }
   }
 
@@ -115,14 +103,6 @@ public class CustomTextBox extends FocusPanel {
   private final StrategyProvider provider = new StrategyProvider();
   final CursorAnimation animation = new CursorAnimation(this);
 
-  private final Timer cursorTimer = new Timer() {
-
-    @Override
-    public void run() {
-      animation.run(1000);
-    }
-  };
-
   Canvas canvas = Canvas.createIfSupported();
   Context2d context = canvas.getContext2d();
 
@@ -135,17 +115,22 @@ public class CustomTextBox extends FocusPanel {
   private int maxWidth, maxHeight;
 
   public CustomTextBox() {
-    setWidget(canvas);
-    registerHandlers();
 
+    setWidget(canvas);
+
+    // add handlers
+    new FocusBlurHandler(this);
+    new InputHandler(this);
+    new SelectionHandler(this);
+
+    // TODO move to CSS
     getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
     getElement().getStyle().setBorderColor("black");
     getElement().getStyle().setBorderWidth(1., Unit.PX);
-
+    getElement().getStyle().setPadding(5, Unit.PX);
     getElement().getStyle().setCursor(Cursor.TEXT);
 
     setSize("300px", "30px");
-    sinkEvents(Event.FOCUSEVENTS);
   }
 
   Context2d buildItemContext() {
@@ -166,65 +151,32 @@ public class CustomTextBox extends FocusPanel {
     context.setTextBaseline(TextBaseline.TOP);
   }
 
-  private boolean isNumber(char c) {
-    return ((c) >= 48) && ((c) <= 59);
-  }
-
-  @Override
-  public void onBrowserEvent(Event event) {
-    super.onBrowserEvent(event);
-    switch (event.getTypeInt()) {
-
-    case Event.ONFOCUS:
-      cursorTimer.scheduleRepeating(1000);
-      break;
-
-    case Event.ONBLUR:
-      cursorTimer.cancel();
-      break;
-    }
-  }
-
-  void registerHandlers() {
-
-    addClickHandler(selectionHandler);
-
-    addKeyPressHandler(new KeyPressHandler() {
-
-      @Override
-      public void onKeyPress(KeyPressEvent event) {
-
-        if (event.isAnyModifierKeyDown()) {
-          return;
-        }
-
-        // remove last char
-        if ((event.getNativeEvent().getCharCode()) == KeyCodes.KEY_BACKSPACE) {
-          CanvasElement elem = canvas.getCanvasElement();
-          context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-          String word = textBuilder.toString();
-          setText(word.substring(0, word.length() - 1));
-          event.preventDefault();
-          return;
-        }
-
-        char symbol = event.getCharCode();
-
-        // choose and execute strategy
-        provider.getStrategy().addChar(symbol, canvas, context);
-        textBuilder.append(symbol);
-      }
-    });
-
-    addMouseMoveHandler(selectionHandler);
-    addMouseDownHandler(selectionHandler);
-    addMouseUpHandler(selectionHandler);
-    addDoubleClickHandler(selectionHandler);
+  private boolean isNumber(int c) {
+    return (c >= 48) && (c <= 59);
   }
 
   void resetInd() {
     dx = 0;
     provider.cntr = 0;
+  }
+
+  void addChar(char symbol) {
+    provider.getStrategy().addChar(symbol, canvas, context);
+    textBuilder.append(symbol);
+  }
+
+  void removeChar() {
+
+    // skip removing for empty textBox
+    if (textBuilder.length() == 0) {
+      return;
+    }
+
+    // total redraw for shorter buffer width
+    CanvasElement elem = canvas.getCanvasElement();
+    context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
+    String word = textBuilder.toString();
+    setText(word.substring(0, word.length() - 1));
   }
 
   @Override
@@ -258,7 +210,7 @@ public class CustomTextBox extends FocusPanel {
     textBuilder.append(text);
   }
 
-  private void updateIndex(Context2d itemContext, char symbol) {
+  private void updateIndex() {
     dx += symbolWidth;
   }
 }

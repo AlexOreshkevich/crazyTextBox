@@ -16,11 +16,14 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
   private final CustomTextBox textBox;
 
-  /**
-   * @param textBox
-   */
   SelectionHandler(CustomTextBox textBox) {
     this.textBox = textBox;
+
+    textBox.addMouseMoveHandler(this);
+    textBox.addMouseDownHandler(this);
+    textBox.addMouseUpHandler(this);
+    textBox.addDoubleClickHandler(this);
+    textBox.addClickHandler(this);
   }
 
   boolean isDown;

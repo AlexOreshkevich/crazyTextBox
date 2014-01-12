@@ -37,70 +37,15 @@ public class CustomTextBox extends FocusPanel {
   // Note: It’s best to use vector fonts when scaling or rotating text,
   // because bitmapped fonts can appear jagged when scaled up or rotated.
   private final String fontName = "Courier";
+  private final int MAX_CHARS = 310;
 
-  private interface KeyProcessingStrategy {
+  public interface KeyProcessingStrategy {
     void addChar(char symbol, Canvas canvas, Context2d context);
-  }
-
-  private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
-
-    @Override
-    public void addChar(char symbol, Canvas canvas, Context2d context) {
-
-      // Every letter at an even position is shown turned upside down.
-
-      Context2d itemContext = buildItemContext();
-      animation.removeCursor(dx);
-      context.clearRect(dx, 0, symbolWidth, canvas.getCoordinateSpaceHeight());
-
-      int y = 1;
-      if (!isNumber(symbol)) {
-        itemContext.setTextBaseline(TextBaseline.BOTTOM);
-      } else {
-        y = -2;
-      }
-
-      itemContext.translate(0, fontHeight + 3);
-      itemContext.scale(1, -1);
-      itemContext.fillText(symbol + "", 0, fontHeight + y);
-      itemContext.restore();
-      context.drawImage(itemContext.getCanvas(), dx, 0);
-      updateIndex();
-    }
-  }
-
-  private class OddKeyProcessingStrategy implements KeyProcessingStrategy {
-
-    @Override
-    public void addChar(char symbol, Canvas canvas, Context2d context) {
-
-      Context2d itemContext = buildItemContext();
-      animation.removeCursor(dx);
-      context.clearRect(dx, 0, symbolWidth, canvas.getCoordinateSpaceHeight());
-
-      itemContext.translate(0, fontHeight);
-      itemContext.fillText(symbol + "", 0, 0);
-      itemContext.restore();
-      context.drawImage(itemContext.getCanvas(), dx, 0);
-      updateIndex();
-    }
-  }
-
-  private class StrategyProvider {
-
-    KeyProcessingStrategy evenStrategy = new EvenKeyProcessingStrategy();
-    KeyProcessingStrategy oddStrategy = new OddKeyProcessingStrategy();
-
-    int cntr = 0;
-
-    KeyProcessingStrategy getStrategy() {
-      return (++cntr % 2) == 0 ? evenStrategy : oddStrategy;
-    }
   }
 
   StringBuilder textBuilder = new StringBuilder();
 
-  private final StrategyProvider provider = new StrategyProvider();
+  private final StrategyProvider provider = new StrategyProvider(this);
   final CursorAnimation animation = new CursorAnimation(this);
 
   Canvas canvas = Canvas.createIfSupported();
@@ -151,7 +96,7 @@ public class CustomTextBox extends FocusPanel {
     context.setTextBaseline(TextBaseline.TOP);
   }
 
-  private boolean isNumber(int c) {
+  boolean isNumber(int c) {
     return (c >= 48) && (c <= 59);
   }
 
@@ -161,6 +106,12 @@ public class CustomTextBox extends FocusPanel {
   }
 
   void addChar(char symbol) {
+
+    // The maximum input length must be set to 310 characters.
+    if (textBuilder.length() == MAX_CHARS) {
+      return;
+    }
+
     provider.getStrategy().addChar(symbol, canvas, context);
     textBuilder.append(symbol);
   }
@@ -210,7 +161,7 @@ public class CustomTextBox extends FocusPanel {
     textBuilder.append(text);
   }
 
-  private void updateIndex() {
+  void updateIndex() {
     dx += symbolWidth;
   }
 }

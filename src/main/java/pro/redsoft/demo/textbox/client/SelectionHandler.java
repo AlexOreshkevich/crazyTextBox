@@ -51,7 +51,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     removeSelection();
 
     // load relative coordinate of click
-    int relativeX = event.getRelativeX(this.textBox.canvas.getCanvasElement());
+    int relativeX = event.getRelativeX(textBox.canvas.getCanvasElement());
 
     // current displacement by X axis that depends on words
     int dx = 0;
@@ -61,12 +61,12 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     for (String word : words) {
 
       // word length in absolute coordinates (with displacement)
-      int absoluteX = (word.length() * this.textBox.symbolWidth) + dx;
+      int relWordWidth = (word.length() * textBox.symbolWidth);
+      int absoluteX = relWordWidth + dx;
 
       // search word matching click and draw selection
       if (absoluteX >= relativeX) {
-        drawSelection(0, 0, absoluteX, this.textBox.canvas.getCanvasElement()
-            .getHeight(), false);
+        drawSelection(dx, relWordWidth, false);
         hasWordSelection = true;
         break; // next words lenght is also greater than relativeX
       }
@@ -84,23 +84,39 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
     // remove existing selection
     if (hasWordSelection) {
-      drawSelection(0, 0, this.textBox.canvas.getCanvasElement().getWidth(),
-          this.textBox.canvas.getCanvasElement().getHeight(), true);
+      drawSelection(0, textBox.canvas.getCanvasElement().getWidth(), true);
       hasWordSelection = false;
     }
+
+    // load relative coordinate of click
+    int relativeX = event.getRelativeX(textBox.canvas.getCanvasElement());
+    int symbolUnderCLick = (int) (Math.ceil(relativeX / textBox.symbolWidth) + 1);
+    double curDx = textBox.symbolWidth * symbolUnderCLick;
+
+    double maxDx = textBox.symbolWidth * textBox.textBuilder.length();
+    if (curDx > maxDx) {
+      curDx = maxDx;
+    }
+
+    // change cursor position
+    textBox.animation.moveTo(curDx);
+    textBox.dx = curDx;
   }
 
-  private void drawSelection(double x, double y, double w, double h,
-      boolean remove) {
+  private void drawSelection(double x, double w, boolean remove) {
+
+    int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
+    double startY = 0.1 * canvasHeight;
+    double endY = 0.99 * canvasHeight;
 
     if (remove) {
-      textBox.context.clearRect(x, y, w, h);
+      textBox.context.clearRect(x, startY, w, endY);
       textBox.setText(textBox.textBuilder.toString());
     } else {
       textBox.context.save();
       textBox.context.setFillStyle("blue");
       textBox.context.setGlobalAlpha(0.3);
-      textBox.context.fillRect(x, y, w, h);
+      textBox.context.fillRect(x, startY, w, endY);
       textBox.context.restore();
     }
   }

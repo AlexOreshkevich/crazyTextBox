@@ -9,13 +9,16 @@ import com.google.gwt.canvas.dom.client.Context2d.LineCap;
 // 3# draw white line
 class CursorAnimation extends Animation {
 
-  private final CustomTextBox customTextBox;
+  private boolean isVisible;
+  private final CustomTextBox textBox;
+  private final int curDx;
+  private final double curLineWidth;
 
   CursorAnimation(CustomTextBox customTextBox) {
-    this.customTextBox = customTextBox;
+    this.textBox = customTextBox;
+    curDx = 1;
+    curLineWidth = 1;
   }
-
-  private boolean isVisible;
 
   @Override
   protected void onUpdate(double progress) {
@@ -33,25 +36,29 @@ class CursorAnimation extends Animation {
   }
 
   private void drawCursor(String strokeStyle) {
-
-    Context2d ctx = customTextBox.context;
+    Context2d ctx = textBox.context;
     ctx.setStrokeStyle(strokeStyle);
     ctx.beginPath();
+    ctx.setLineWidth(curLineWidth);
     ctx.setLineCap(LineCap.BUTT);
-    double curDx = customTextBox.dx + (customTextBox.fontHeight / 10);
-    ctx.moveTo(curDx, customTextBox.fontHeight / 10);
-    ctx.lineTo(curDx, 1.2 * customTextBox.fontHeight);
+    double dx = textBox.dx;
+    ctx.moveTo(dx, textBox.fontHeight / 10);
+    ctx.lineTo(dx, 1.2 * textBox.fontHeight);
     ctx.stroke();
   }
 
-  void removePreviousCursor() {
-    double dx = customTextBox.dx;
-    Context2d ctx = customTextBox.context;
-    ctx.save();
+  void removeCursor(double x) {
+    Context2d ctx = textBox.context;
+    double dx = (curDx + curLineWidth);
+    ctx.clearRect(x - dx, 0, 2 * dx, ctx.getCanvas().getHeight());
+  }
 
-    double h = 1.2 * customTextBox.fontHeight;
+  void moveTo(double x) {
 
-    ctx.clearRect(dx, 0, customTextBox.symbolWidth, h);
-    ctx.restore();
+    // clear current cursor
+    removeCursor(textBox.dx);
+
+    // update current cursor dx
+    textBox.dx = x;
   }
 }

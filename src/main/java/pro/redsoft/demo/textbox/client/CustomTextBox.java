@@ -1,7 +1,5 @@
 package pro.redsoft.demo.textbox.client;
 
-import pro.redsoft.demo.textbox.client.FontSettings.Font;
-
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.canvas.dom.client.Context2d.TextAlign;
@@ -30,10 +28,21 @@ import com.google.gwt.user.client.ui.FocusPanel;
  * vertical alignment of the letters in the resulting text view which contains
  * letters with mixed orientations (as shown on the picture).
  * </p>
+ * <p>
+ * The control must display a regular text cursor indicating the current
+ * position. This cursor must be blinking roughly once a second (like in a
+ * normal text input).
+ * </p>
  * 
+ * @see https://umstelkb.atlassian.net/wiki/display/SC/Crazy+Text+Input
  * @author Alex N. Oreshkevich
  */
-public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
+public class CustomTextBox extends FocusPanel {
+
+  // Note: It’s best to use vector fonts when scaling or rotating text,
+  // because bitmapped fonts can appear jagged when scaled up or rotated.
+  private final String fontName = "Courier";
+  private final SelectionHandler selectionHandler = new SelectionHandler(this);
 
   private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
 
@@ -46,7 +55,8 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     public void addChar(char symbol, Canvas canvas, Context2d context) {
 
       Context2d itemContext = buildItemContext();
-      animation.removePreviousCursor();
+      animation.removeCursor(dx);
+      context.clearRect(dx, 0, symbolWidth, canvas.getCoordinateSpaceHeight());
 
       int y = 1;
       if (!isNumber(symbol)) {
@@ -77,7 +87,8 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     public void addChar(char symbol, Canvas canvas, Context2d context) {
 
       Context2d itemContext = buildItemContext();
-      animation.removePreviousCursor();
+      animation.removeCursor(dx);
+      context.clearRect(dx, 0, symbolWidth, canvas.getCoordinateSpaceHeight());
 
       itemContext.translate(0, fontHeight);
       itemContext.fillText(symbol + "", 0, 0);
@@ -97,17 +108,13 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     KeyProcessingStrategy getStrategy() {
       return (++cntr % 2) == 0 ? evenStrategy : oddStrategy;
     }
-
-    void init() {
-      cntr = 0;
-    }
   }
 
   StringBuilder textBuilder = new StringBuilder();
 
   private final StrategyProvider provider = new StrategyProvider();
+  final CursorAnimation animation = new CursorAnimation(this);
 
-  private final CursorAnimation animation = new CursorAnimation(this);
   private final Timer cursorTimer = new Timer() {
 
     @Override
@@ -125,12 +132,9 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
   int fontHeight = 0;
   int symbolWidth;
 
-  String fontName = Font.Courier.getFontName();
   private int maxWidth, maxHeight;
 
-  private final SelectionHandler selectionHandler = new SelectionHandler(this);
-
-  CustomTextBox() {
+  public CustomTextBox() {
     setWidget(canvas);
     registerHandlers();
 
@@ -140,8 +144,6 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
     getElement().getStyle().setCursor(Cursor.TEXT);
 
-    // Note: It’s best to use vector fonts when scaling or rotating text,
-    // because bitmapped fonts can appear jagged when scaled up or rotated.
     setSize("300px", "30px");
     sinkEvents(Event.FOCUSEVENTS);
   }
@@ -183,17 +185,6 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     }
   }
 
-  @Override
-  public void onChangeSettings(FontSettings settings) {
-    CanvasElement elem = canvas.getCanvasElement();
-    context.save();
-    context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-    fontName = settings.getFont().getFontName();
-    initContext(fontHeight + "pt " + fontName);
-    setText(textBuilder.toString());
-    context.restore();
-  }
-
   void registerHandlers() {
 
     addClickHandler(selectionHandler);
@@ -233,7 +224,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
   void resetInd() {
     dx = 0;
-    provider.init();
+    provider.cntr = 0;
   }
 
   @Override

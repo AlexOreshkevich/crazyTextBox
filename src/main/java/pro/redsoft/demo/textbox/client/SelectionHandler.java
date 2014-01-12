@@ -38,6 +38,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     isDown = false;
   }
 
+  @SuppressWarnings("unused")
   @Override
   public void onMouseMove(MouseMoveEvent event) {
     int x = event.getRelativeX(textBox.canvas.getCanvasElement());
@@ -60,7 +61,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     int dx = 0;
 
     // search and select word that relates to this click
-    String[] words = this.textBox.textBuilder.toString().split(" ");
+    String[] words = textBox.textBuilder.toString().split(" ");
     for (String word : words) {
 
       // word length in absolute coordinates (with displacement)
@@ -75,7 +76,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
       }
 
       // update displacement (symbolWidth = lenght of delimiter(' '))
-      dx += absoluteX + this.textBox.symbolWidth;
+      dx += (relWordWidth + textBox.symbolWidth);
     }
   }
 

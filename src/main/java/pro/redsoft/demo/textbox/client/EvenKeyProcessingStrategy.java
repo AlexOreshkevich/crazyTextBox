@@ -1,16 +1,11 @@
 package pro.redsoft.demo.textbox.client;
 
-import pro.redsoft.demo.textbox.client.CustomTextBox.KeyProcessingStrategy;
-
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 
 class EvenKeyProcessingStrategy implements CustomTextBox.KeyProcessingStrategy {
 
-  /**
-   * 
-   */
   private final CustomTextBox textBox;
 
   /**
@@ -24,10 +19,10 @@ class EvenKeyProcessingStrategy implements CustomTextBox.KeyProcessingStrategy {
   public void addChar(char symbol, Canvas canvas, Context2d context) {
 
     // Every letter at an even position is shown turned upside down.
-
     Context2d itemContext = textBox.buildItemContext();
-    textBox.animation.removeCursor(textBox.dx);
-    context.clearRect(textBox.dx, 0, textBox.symbolWidth, canvas.getCoordinateSpaceHeight());
+    textBox.cursor.removeCursor(textBox.dx);
+    context.clearRect(textBox.dx, 0, textBox.symbolWidth,
+        canvas.getCoordinateSpaceHeight());
 
     int y = 1;
     if (!textBox.isNumber(symbol)) {

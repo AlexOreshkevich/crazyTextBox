@@ -1,5 +1,6 @@
 package pro.redsoft.demo.textbox.client;
 
+import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
@@ -15,8 +16,10 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     MouseUpHandler, DoubleClickHandler, ClickHandler {
 
   private final CustomTextBox textBox;
+  boolean isDown, hasWordSelection;
 
   SelectionHandler(CustomTextBox textBox) {
+
     this.textBox = textBox;
 
     textBox.addMouseMoveHandler(this);
@@ -25,8 +28,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     textBox.addDoubleClickHandler(this);
     textBox.addClickHandler(this);
   }
-
-  boolean isDown;
 
   @Override
   public void onMouseDown(MouseDownEvent event) {
@@ -44,8 +45,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     int x = event.getRelativeX(textBox.canvas.getCanvasElement());
     int y = event.getRelativeY(textBox.canvas.getCanvasElement());
   }
-
-  boolean hasWordSelection;
 
   @Override
   public void onDoubleClick(DoubleClickEvent event) {
@@ -88,7 +87,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
     // remove existing selection
     if (hasWordSelection) {
-      drawSelection(0, textBox.canvas.getCanvasElement().getWidth(), true);
+      clearSelection();
       hasWordSelection = false;
     }
 
@@ -97,32 +96,39 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     int symbolUnderCLick = (int) (Math.ceil(relativeX / textBox.symbolWidth) + 1);
     double curDx = textBox.symbolWidth * symbolUnderCLick;
 
-    double maxDx = textBox.symbolWidth * textBox.textBuilder.length();
-    if (curDx > maxDx) {
-      curDx = maxDx;
-    }
-
     // change cursor position
-    textBox.animation.moveTo(curDx);
-    textBox.dx = curDx;
+    textBox.cursor.moveTo(curDx);
+  }
+
+  void selectLeft() {
+
+  }
+
+  void selectRight() {
+
   }
 
   private void drawSelection(double x, double w, boolean remove) {
 
+    Context2d ctx = textBox.context;
     int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
     double startY = 0.1 * canvasHeight;
     double endY = 0.99 * canvasHeight;
 
     if (remove) {
-      textBox.context.clearRect(x, startY, w, endY);
+      ctx.clearRect(x, startY, w, endY);
       textBox.setText(textBox.textBuilder.toString());
     } else {
-      textBox.context.save();
-      textBox.context.setFillStyle("blue");
-      textBox.context.setGlobalAlpha(0.3);
-      textBox.context.fillRect(x, startY, w, endY);
-      textBox.context.restore();
+      ctx.save();
+      ctx.setFillStyle("blue");
+      ctx.setGlobalAlpha(0.3);
+      ctx.fillRect(x, startY, w, endY);
+      ctx.restore();
     }
+  }
+
+  void clearSelection() {
+    drawSelection(0, textBox.canvas.getCanvasElement().getWidth(), true);
   }
 
   native void removeSelection() /*-{

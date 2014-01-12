@@ -30,6 +30,24 @@ class InputHandler implements KeyDownHandler, KeyPressHandler {
     case KeyCodes.KEY_ENTER:
       event.preventDefault();
       break;
+
+    case KeyCodes.KEY_LEFT:
+      if (event.isShiftKeyDown()) {
+        textBox.selectionHandler.selectLeft();
+      } else {
+        textBox.cursor.moveLeft();
+      }
+      event.preventDefault();
+      break;
+
+    case KeyCodes.KEY_RIGHT:
+      if (event.isShiftKeyDown()) {
+        textBox.selectionHandler.selectRight();
+      } else {
+        textBox.cursor.moveRight();
+      }
+      event.preventDefault();
+      break;
     }
   }
 

@@ -7,14 +7,14 @@ import com.google.gwt.canvas.dom.client.Context2d.LineCap;
 // 1# draw black line
 // 2# pause for 0.3 of progress
 // 3# draw white line
-class CursorAnimation extends Animation {
+class CursorHandler extends Animation {
 
   private boolean isVisible;
   private final CustomTextBox textBox;
   private final int curDx;
   private final double curLineWidth;
 
-  CursorAnimation(CustomTextBox customTextBox) {
+  CursorHandler(CustomTextBox customTextBox) {
     this.textBox = customTextBox;
     curDx = 1;
     curLineWidth = 1;
@@ -55,10 +55,27 @@ class CursorAnimation extends Animation {
 
   void moveTo(double x) {
 
+    // check that moving to left/right (any x) is available
+    // if no, fix parameter x for valid value
+    double maxDx = textBox.getMaxTextWidth();
+    if (x < 0) {
+      x = 0;
+    } else if (x > maxDx) {
+      x = maxDx;
+    }
+
     // clear current cursor
     removeCursor(textBox.dx);
 
     // update current cursor dx
     textBox.dx = x;
+  }
+
+  void moveLeft() {
+    moveTo(textBox.dx - textBox.symbolWidth);
+  }
+
+  void moveRight() {
+    moveTo(textBox.dx + textBox.symbolWidth);
   }
 }

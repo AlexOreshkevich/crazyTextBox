@@ -46,11 +46,12 @@ public class CustomTextBox extends FocusPanel {
   StringBuilder textBuilder = new StringBuilder();
 
   private final StrategyProvider provider = new StrategyProvider(this);
-  final CursorAnimation animation = new CursorAnimation(this);
+  final CursorHandler cursor = new CursorHandler(this);
 
   Canvas canvas = Canvas.createIfSupported();
   Context2d context = canvas.getContext2d();
 
+  SelectionHandler selectionHandler = new SelectionHandler(this);
   StringBuilder currentText = new StringBuilder();
 
   double dx = 0;
@@ -66,7 +67,6 @@ public class CustomTextBox extends FocusPanel {
     // add handlers
     new FocusBlurHandler(this);
     new InputHandler(this);
-    new SelectionHandler(this);
 
     // TODO move to CSS
     getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
@@ -163,5 +163,9 @@ public class CustomTextBox extends FocusPanel {
 
   void updateIndex() {
     dx += symbolWidth;
+  }
+
+  public double getMaxTextWidth() {
+    return symbolWidth * textBuilder.length();
   }
 }

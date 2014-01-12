@@ -11,7 +11,7 @@ import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 public class FontSettings {
 
   public enum Font {
-    Arial, Console("Lucida Console"), Monospace, Helvetica, Courier;
+    /* Arial, Console("Lucida Console"), Monospace, Helvetica, */Courier;
 
     /** Enum id and actual font string representation may be different. */
     private String name;
@@ -30,7 +30,7 @@ public class FontSettings {
   }
 
   public FontSettings() {
-    font = Font.Monospace;
+    font = Font.Courier;
     textAlign = TextAlign.LEFT;
     fillStyle = "black";
     textBaseline = TextBaseline.TOP;

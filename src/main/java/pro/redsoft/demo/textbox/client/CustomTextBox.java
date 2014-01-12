@@ -10,8 +10,7 @@ import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.Event;
@@ -35,14 +34,6 @@ import com.google.gwt.user.client.ui.FocusPanel;
  * @author Alex N. Oreshkevich
  */
 public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
-
-  Context2d buildItemContext() {
-    Canvas item = Canvas.createIfSupported();
-    Context2d itemContext = item.getContext2d();
-    itemContext.save();
-    itemContext.setFont(fontHeight + "pt " + fontName);
-    return itemContext;
-  }
 
   private class EvenKeyProcessingStrategy implements KeyProcessingStrategy {
 
@@ -96,21 +87,6 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     }
   }
 
-  @Override
-  public void onBrowserEvent(Event event) {
-    super.onBrowserEvent(event);
-    switch (event.getTypeInt()) {
-
-    case Event.ONFOCUS:
-      cursorTimer.scheduleRepeating(1000);
-      break;
-
-    case Event.ONBLUR:
-      cursorTimer.cancel();
-      break;
-    }
-  }
-
   private class StrategyProvider {
 
     KeyProcessingStrategy evenStrategy = new EvenKeyProcessingStrategy();
@@ -127,8 +103,10 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     }
   }
 
-  private StringBuilder textBuilder = new StringBuilder();
+  StringBuilder textBuilder = new StringBuilder();
+
   private final StrategyProvider provider = new StrategyProvider();
+
   private final CursorAnimation animation = new CursorAnimation(this);
   private final Timer cursorTimer = new Timer() {
 
@@ -139,14 +117,18 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
   };
 
   Canvas canvas = Canvas.createIfSupported();
-
   Context2d context = canvas.getContext2d();
+
   StringBuilder currentText = new StringBuilder();
 
   double dx = 0;
   int fontHeight = 0;
+  int symbolWidth;
 
-  String fontName = Font.Monospace.getFontName();
+  String fontName = Font.Courier.getFontName();
+  private int maxWidth, maxHeight;
+
+  private final SelectionHandler selectionHandler = new SelectionHandler(this);
 
   CustomTextBox() {
     setWidget(canvas);
@@ -164,6 +146,14 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     sinkEvents(Event.FOCUSEVENTS);
   }
 
+  Context2d buildItemContext() {
+    Canvas item = Canvas.createIfSupported();
+    Context2d itemContext = item.getContext2d();
+    itemContext.save();
+    itemContext.setFont(fontHeight + "pt " + fontName);
+    return itemContext;
+  }
+
   private void initContext(String font) {
 
     resetInd();
@@ -174,13 +164,23 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     context.setTextBaseline(TextBaseline.TOP);
   }
 
-  void resetInd() {
-    dx = 0;
-    provider.init();
-  }
-
   private boolean isNumber(char c) {
     return ((c) >= 49) && ((c) <= 59);
+  }
+
+  @Override
+  public void onBrowserEvent(Event event) {
+    super.onBrowserEvent(event);
+    switch (event.getTypeInt()) {
+
+    case Event.ONFOCUS:
+      cursorTimer.scheduleRepeating(1000);
+      break;
+
+    case Event.ONBLUR:
+      cursorTimer.cancel();
+      break;
+    }
   }
 
   @Override
@@ -196,13 +196,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
 
   void registerHandlers() {
 
-    addDomHandler(new ClickHandler() {
-
-      @Override
-      public void onClick(ClickEvent event) {
-        setFocus(true);
-      }
-    }, ClickEvent.getType());
+    addClickHandler(selectionHandler);
 
     addKeyPressHandler(new KeyPressHandler() {
 
@@ -214,7 +208,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
         }
 
         // remove last char
-        if (event.getCharCode() == 0) {
+        if ((event.getNativeEvent().getCharCode()) == KeyCodes.KEY_BACKSPACE) {
           CanvasElement elem = canvas.getCanvasElement();
           context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
           String word = textBuilder.toString();
@@ -230,9 +224,17 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
         textBuilder.append(symbol);
       }
     });
+
+    addMouseMoveHandler(selectionHandler);
+    addMouseDownHandler(selectionHandler);
+    addMouseUpHandler(selectionHandler);
+    addDoubleClickHandler(selectionHandler);
   }
 
-  private int maxWidth, maxHeight;
+  void resetInd() {
+    dx = 0;
+    provider.init();
+  }
 
   @Override
   public void setSize(String width, String height) {
@@ -252,6 +254,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     canvas.setCoordinateSpaceWidth(maxWidth);
     canvas.setCoordinateSpaceHeight(maxHeight);
 
+    symbolWidth = (int) (fontHeight * 0.95);
     initContext(fontHeight + "pt " + fontName);
   }
 
@@ -264,7 +267,7 @@ public class CustomTextBox extends FocusPanel implements SettingsChangeHandler {
     textBuilder.append(text);
   }
 
-  private void updateIndex(Context2d context, char symbol) {
-    dx += fontHeight * 0.95;
+  private void updateIndex(Context2d itemContext, char symbol) {
+    dx += symbolWidth;
   }
 }

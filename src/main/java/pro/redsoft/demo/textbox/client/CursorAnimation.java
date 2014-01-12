@@ -49,10 +49,9 @@ class CursorAnimation extends Animation {
     Context2d ctx = customTextBox.context;
     ctx.save();
 
-    double w = 0.95 * customTextBox.fontHeight;
     double h = 1.2 * customTextBox.fontHeight;
 
-    ctx.clearRect(dx, 0, w, h);
+    ctx.clearRect(dx, 0, customTextBox.symbolWidth, h);
     ctx.restore();
   }
 }

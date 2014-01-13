@@ -8,7 +8,11 @@ import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.user.client.ui.MenuBar;
+import com.google.gwt.user.client.ui.MenuItem;
+import com.google.gwt.user.client.ui.PopupPanel;
 
 /**
  * <p>
@@ -34,138 +38,138 @@ import com.google.gwt.user.client.ui.FocusPanel;
  */
 public class CustomTextBox extends FocusPanel {
 
-  // Note: It’s best to use vector fonts when scaling or rotating text,
-  // because bitmapped fonts can appear jagged when scaled up or rotated.
-  private final String fontName = "Courier";
-  private final int MAX_CHARS = 310;
+	// Note: It’s best to use vector fonts when scaling or rotating text,
+	// because bitmapped fonts can appear jagged when scaled up or rotated.
+	private final String fontName = "Courier";
+	private final int MAX_CHARS = 310;
 
-  public interface KeyProcessingStrategy {
-    void addChar(char symbol, Canvas canvas, Context2d context);
-  }
+	public interface KeyProcessingStrategy {
+		void addChar(char symbol, Canvas canvas, Context2d context);
+	}
 
-  StringBuilder textBuilder = new StringBuilder();
+	StringBuilder textBuilder = new StringBuilder();
 
-  private final StrategyProvider provider = new StrategyProvider(this);
-  final CursorHandler cursor = new CursorHandler(this);
+	private final StrategyProvider provider = new StrategyProvider(this);
+	final CursorHandler cursor = new CursorHandler(this);
 
-  Canvas canvas = Canvas.createIfSupported();
-  Context2d context = canvas.getContext2d();
+	Canvas canvas = Canvas.createIfSupported();
+	Context2d context = canvas.getContext2d();
 
-  SelectionHandler selectionHandler = new SelectionHandler(this);
-  StringBuilder currentText = new StringBuilder();
+	SelectionHandler selectionHandler = new SelectionHandler(this);
+	StringBuilder currentText = new StringBuilder();
 
-  double dx = 0;
-  int fontHeight = 0;
-  int symbolWidth;
+	double dx = 0;
+	int fontHeight = 0;
+	int symbolWidth;
 
-  private int maxWidth, maxHeight;
+	private int maxWidth, maxHeight;
 
-  public CustomTextBox() {
+	public CustomTextBox() {
 
-    setWidget(canvas);
+		setWidget(canvas);
 
-    // add handlers
-    new FocusBlurHandler(this);
-    new InputHandler(this);
+		// add handlers
+		new FocusBlurHandler(this);
+		new InputHandler(this);
 
-    // TODO move to CSS
-    getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
-    getElement().getStyle().setBorderColor("black");
-    getElement().getStyle().setBorderWidth(1., Unit.PX);
-    getElement().getStyle().setPadding(5, Unit.PX);
-    getElement().getStyle().setCursor(Cursor.TEXT);
+		// TODO move to CSS
+		getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
+		getElement().getStyle().setBorderColor("black");
+		getElement().getStyle().setBorderWidth(1., Unit.PX);
+		getElement().getStyle().setPadding(5, Unit.PX);
+		getElement().getStyle().setCursor(Cursor.TEXT);
 
-    setSize("300px", "30px");
-  }
+		setSize("300px", "30px");
+	}
 
-  Context2d buildItemContext() {
-    Canvas item = Canvas.createIfSupported();
-    Context2d itemContext = item.getContext2d();
-    itemContext.save();
-    itemContext.setFont(fontHeight + "pt " + fontName);
-    return itemContext;
-  }
+	Context2d buildItemContext() {
+		Canvas item = Canvas.createIfSupported();
+		Context2d itemContext = item.getContext2d();
+		itemContext.save();
+		itemContext.setFont(fontHeight + "pt " + fontName);
+		return itemContext;
+	}
 
-  private void initContext(String font) {
+	private void initContext(String font) {
 
-    resetInd();
+		resetInd();
 
-    context.setFont(font);
-    context.setTextAlign(TextAlign.LEFT);
-    context.setFillStyle("black");
-    context.setTextBaseline(TextBaseline.TOP);
-  }
+		context.setFont(font);
+		context.setTextAlign(TextAlign.LEFT);
+		context.setFillStyle("black");
+		context.setTextBaseline(TextBaseline.TOP);
+	}
 
-  boolean isNumber(int c) {
-    return (c >= 48) && (c <= 59);
-  }
+	boolean isNumber(int c) {
+		return (c >= 48) && (c <= 59);
+	}
 
-  void resetInd() {
-    dx = 0;
-    provider.cntr = 0;
-  }
+	void resetInd() {
+		dx = 0;
+		provider.cntr = 0;
+	}
 
-  void addChar(char symbol) {
+	void addChar(char symbol) {
 
-    // The maximum input length must be set to 310 characters.
-    if (textBuilder.length() == MAX_CHARS) {
-      return;
-    }
+		// The maximum input length must be set to 310 characters.
+		if (textBuilder.length() == MAX_CHARS) {
+			return;
+		}
 
-    provider.getStrategy().addChar(symbol, canvas, context);
-    textBuilder.append(symbol);
-  }
+		provider.getStrategy().addChar(symbol, canvas, context);
+		textBuilder.append(symbol);
+	}
 
-  void removeChar() {
+	void removeChar() {
 
-    // skip removing for empty textBox
-    if (textBuilder.length() == 0) {
-      return;
-    }
+		// skip removing for empty textBox
+		if (textBuilder.length() == 0) {
+			return;
+		}
 
-    // total redraw for shorter buffer width
-    CanvasElement elem = canvas.getCanvasElement();
-    context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-    String word = textBuilder.toString();
-    setText(word.substring(0, word.length() - 1));
-  }
+		// total redraw for shorter buffer width
+		CanvasElement elem = canvas.getCanvasElement();
+		context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
+		String word = textBuilder.toString();
+		setText(word.substring(0, word.length() - 1));
+	}
 
-  @Override
-  public void setSize(String width, String height) {
+	@Override
+	public void setSize(String width, String height) {
 
-    int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
-    int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
-    fontHeight = (int) (0.95 * h);
+		int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
+		int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
+		fontHeight = (int) (0.95 * h);
 
-    h *= 1.2;
+		h *= 1.2;
 
-    canvas.setWidth(w + "px");
-    canvas.setHeight(h + "px");
+		canvas.setWidth(w + "px");
+		canvas.setHeight(h + "px");
 
-    maxWidth = w;
-    maxHeight = h;
+		maxWidth = w;
+		maxHeight = h;
 
-    canvas.setCoordinateSpaceWidth(maxWidth);
-    canvas.setCoordinateSpaceHeight(maxHeight);
+		canvas.setCoordinateSpaceWidth(maxWidth);
+		canvas.setCoordinateSpaceHeight(maxHeight);
 
-    symbolWidth = (int) (fontHeight * 0.95);
-    initContext(fontHeight + "pt " + fontName);
-  }
+		symbolWidth = (int) (fontHeight * 0.95);
+		initContext(fontHeight + "pt " + fontName);
+	}
 
-  public void setText(String text) {
-    resetInd();
-    for (char symbol : text.toCharArray()) {
-      provider.getStrategy().addChar(symbol, canvas, context);
-    }
-    textBuilder = new StringBuilder();
-    textBuilder.append(text);
-  }
+	public void setText(String text) {
+		resetInd();
+		for (char symbol : text.toCharArray()) {
+			provider.getStrategy().addChar(symbol, canvas, context);
+		}
+		textBuilder = new StringBuilder();
+		textBuilder.append(text);
+	}
 
-  void updateIndex() {
-    dx += symbolWidth;
-  }
+	void updateIndex() {
+		dx += symbolWidth;
+	}
 
-  public double getMaxTextWidth() {
-    return symbolWidth * textBuilder.length();
-  }
+	public double getMaxTextWidth() {
+		return symbolWidth * textBuilder.length();
+	}
 }

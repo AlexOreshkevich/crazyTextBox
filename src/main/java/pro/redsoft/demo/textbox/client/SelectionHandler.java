@@ -1,5 +1,10 @@
 package pro.redsoft.demo.textbox.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import pro.redsoft.demo.textbox.client.SelectionHandler.SelectionArea.Symbol;
+
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -17,17 +22,165 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     MouseUpHandler, DoubleClickHandler, ClickHandler {
 
   private final CustomTextBox textBox;
-  boolean isDown, hasWordSelection;
+  boolean isDown;
+
+  class SelectionArea {
+
+    class Symbol {
+      int ind;
+      boolean selected;
+      char value;
+    }
+
+    boolean isAllSelected;
+    List<Symbol> chars = new ArrayList<SelectionHandler.SelectionArea.Symbol>();
+
+    void selectItems(int startInd, int endInd) {
+
+      System.err.println("<system> selectItems:: startInd = " + startInd
+          + " endInd = " + endInd);
+
+      // something can be selected..
+      clearSelection();
+
+      for (int i = startInd; i <= endInd; i++) {
+        chars.get(i - 1).selected = true;
+      }
+
+      textBox.cursor.moveTo(endInd * textBox.symbolWidth);
+      selectArea((startInd - 1) * textBox.symbolWidth,
+          ((endInd - startInd) + 1) * textBox.symbolWidth);
+    }
+
+    int getCurrentInd() {
+      return (int) ((1.1 * textBox.dx) / textBox.symbolWidth);
+    }
+
+    void selectItem(int ind, boolean select, boolean cursorLeft) {
+
+      ind--; // switch to internal coordinates: 0...arr.length - 1
+      if (ind > chars.size()) {
+        ind = chars.size() - 1;
+      }
+
+      if (select) {
+        Symbol s = chars.get(ind);
+        if (s.selected) {
+          return;
+        }
+        double dx = textBox.dx;
+
+        // select left from cursor
+        if (cursorLeft) {
+
+          // skip selection from impossible positions
+          if (textBox.dx == 0) {
+            return;
+          }
+
+          textBox.cursor.moveTo(textBox.dx - textBox.symbolWidth);
+          s.selected = true;
+          selectArea(dx - textBox.symbolWidth, textBox.symbolWidth);
+
+        } else { // select right from cursor
+
+          // skip selection from impossible positions
+          if (dx == textBox.getMaxTextWidth()) {
+            return;
+          }
+
+          textBox.cursor.moveTo(dx + textBox.symbolWidth);
+          s.selected = true;
+          selectArea(dx, textBox.symbolWidth);
+        }
+
+      } else {
+        // TODO
+      }
+    }
+
+    void selectAll() {
+      selectAll(true);
+    }
+
+    void selectAll(boolean select) {
+
+      if (isAllSelected) {
+        return;
+      }
+
+      clearSelection(); // something can be selected..
+
+      if (select) {
+        for (Symbol s : chars) {
+          s.selected = true;
+        }
+        isAllSelected = true;
+        selectArea(0, getTextWidth());
+      } else {
+        isAllSelected = false;
+      }
+    }
+
+    void clearSelection() {
+      Context2d ctx = textBox.context;
+      int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
+      ctx.clearRect(0, 0, getTextWidth(), canvasHeight);
+      textBox.setText(textBox.textBuilder.toString());
+    }
+
+    private void selectArea(double x, double w) {
+
+      System.err.println("<system> selectArea: x = " + x + " w = " + w);
+
+      Context2d ctx = textBox.context;
+      int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
+      double startY = 0.1 * canvasHeight;
+      double endY = 0.99 * canvasHeight;
+      ctx.save();
+      ctx.setFillStyle("blue");
+      ctx.setGlobalAlpha(0.3);
+      ctx.fillRect(x, startY, w, endY);
+      ctx.restore();
+    }
+
+    private int getTextWidth() {
+      return textBox.symbolWidth * chars.size();
+    }
+  }
+
+  private final SelectionArea selectionArea;
 
   SelectionHandler(CustomTextBox textBox) {
 
     this.textBox = textBox;
+    selectionArea = new SelectionArea();
 
     textBox.addMouseMoveHandler(this);
     textBox.addMouseDownHandler(this);
     textBox.addMouseUpHandler(this);
     textBox.addDoubleClickHandler(this);
     textBox.addClickHandler(this);
+  }
+
+  void onSetText(String text) {
+    selectionArea.chars = new ArrayList<Symbol>();
+    char[] symbols = text.toCharArray();
+    for (int i = 0; i < symbols.length; i++) {
+      Symbol e = selectionArea.new Symbol();
+      e.ind = i;
+      e.selected = false;
+      e.value = symbols[i];
+      selectionArea.chars.add(e);
+    }
+  }
+
+  void onAddChar(char c) {
+    Symbol e = selectionArea.new Symbol();
+    e.ind = selectionArea.chars.size();
+    e.selected = false;
+    e.value = c;
+    selectionArea.chars.add(e);
   }
 
   @Override
@@ -52,7 +205,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     CanvasElement canvasElement = textBox.canvas.getCanvasElement();
     int x = event.getRelativeX(canvasElement);
 
-    // if x is less than textBox.dx greater than 25%
+    // if relative (dx) displacement greater than 25%,
     // execute selection and move cursor
     double dx = x - textBox.dx;
     boolean skip = Math.abs((dx / textBox.symbolWidth)) < 0.25;
@@ -61,11 +214,10 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
       return;
     }
 
-    if (dx < 0) { // moving to left
-      selectLeft();
-    } else {
-      selectRight();
-    }
+    int ind = (int) ((1.1 * textBox.dx) / textBox.symbolWidth);
+    boolean isLeft = dx < 0;
+
+    selectionArea.selectItem(ind + (isLeft ? -1 : 1), true, isLeft);
   }
 
   @Override
@@ -91,8 +243,18 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
       // search word matching click and draw selection
       if (absoluteX >= relativeX) {
-        drawSelection(dx, relWordWidth, false);
-        hasWordSelection = true;
+
+        int startInd = dx / textBox.symbolWidth;
+        int endInd = absoluteX / textBox.symbolWidth;
+
+        if (startInd == 0) {
+          startInd = 1;
+        } else {
+          startInd++;
+        }
+
+        selectionArea.selectItems(startInd, endInd);
+
         break; // next words lenght is also greater than relativeX
       }
 
@@ -108,10 +270,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     textBox.setFocus(true);
 
     // remove existing selection
-    if (hasWordSelection) {
-      clearSelection();
-      hasWordSelection = false;
-    }
+    clearSelection();
 
     // load relative coordinate of click
     int relativeX = event.getRelativeX(textBox.canvas.getCanvasElement());
@@ -122,45 +281,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     textBox.cursor.moveTo(curDx);
   }
 
-  void selectLeft() {
-    if (textBox.dx > 0) {
-      double dx = textBox.dx;
-      textBox.cursor.moveTo(textBox.dx - textBox.symbolWidth);
-      drawSelection(dx - textBox.symbolWidth, textBox.symbolWidth, false);
-    }
-  }
-
-  void selectRight() {
-    if (textBox.dx <= (textBox.getMaxTextWidth() - textBox.symbolWidth)) {
-      double dx = textBox.dx;
-      textBox.cursor.moveTo(textBox.dx + textBox.symbolWidth);
-      drawSelection(dx, textBox.symbolWidth, false);
-    }
-  }
-
-  private void drawSelection(double x, double w, boolean remove) {
-
-    Context2d ctx = textBox.context;
-    int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
-    double startY = 0.1 * canvasHeight;
-    double endY = 0.99 * canvasHeight;
-
-    if (remove) {
-      ctx.clearRect(x, 0, w, canvasHeight);
-      textBox.setText(textBox.textBuilder.toString());
-    } else {
-      ctx.save();
-      ctx.setFillStyle("blue");
-      ctx.setGlobalAlpha(0.3);
-      ctx.fillRect(x, startY, w, endY);
-      ctx.restore();
-    }
-  }
-
-  void clearSelection() {
-    drawSelection(0, textBox.canvas.getCanvasElement().getWidth(), true);
-  }
-
   native void removeSelection() /*-{
 		if ($wnd.getSelection) {
 			$wnd.getSelection().removeAllRanges();
@@ -168,4 +288,19 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 			$wnd.selection.empty();
 		}
   }-*/;
+
+  public void selectLeft() {
+    selectionArea.selectItem(selectionArea.getCurrentInd() - 1, true, true);
+  }
+
+  public void selectRight() {
+    selectionArea.selectItem(selectionArea.getCurrentInd() + 1, true, false);
+  }
+
+  public void clearSelection() {
+    if (textBox.textBuilder.length() == 0) {
+      return;
+    }
+    selectionArea.clearSelection();
+  }
 }

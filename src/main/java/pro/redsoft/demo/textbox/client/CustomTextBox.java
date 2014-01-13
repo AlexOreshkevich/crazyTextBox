@@ -114,6 +114,7 @@ public class CustomTextBox extends FocusPanel {
 
     provider.getStrategy().addChar(symbol, canvas, context);
     textBuilder.append(symbol);
+    selectionHandler.onAddChar(symbol);
   }
 
   void removeChar() {
@@ -159,6 +160,7 @@ public class CustomTextBox extends FocusPanel {
     }
     textBuilder = new StringBuilder();
     textBuilder.append(text);
+    selectionHandler.onSetText(text);
   }
 
   void updateIndex() {

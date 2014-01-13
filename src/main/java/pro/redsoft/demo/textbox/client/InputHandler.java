@@ -12,7 +12,7 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
     ContextMenuHandler {
 
   private final CustomTextBox textBox;
-  private MegaPopupMenu menu = new MegaPopupMenu();
+  private SimpleContextMenu menu = new SimpleContextMenu();
 
   public InputHandler(CustomTextBox textBox) {
     this.textBox = textBox;

@@ -1,19 +1,24 @@
 package pro.redsoft.demo.textbox.client;
 
+import com.google.gwt.event.dom.client.ContextMenuEvent;
+import com.google.gwt.event.dom.client.ContextMenuHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 
-class InputHandler implements KeyDownHandler, KeyPressHandler {
+class InputHandler implements KeyDownHandler, KeyPressHandler,
+    ContextMenuHandler {
 
   private final CustomTextBox textBox;
+  private MegaPopupMenu menu = new MegaPopupMenu();
 
   public InputHandler(CustomTextBox textBox) {
     this.textBox = textBox;
     textBox.addKeyDownHandler(this);
     textBox.addKeyPressHandler(this);
+    textBox.addDomHandler(this, ContextMenuEvent.getType());
   }
 
   @Override
@@ -57,5 +62,13 @@ class InputHandler implements KeyDownHandler, KeyPressHandler {
   @Override
   public void onKeyPress(KeyPressEvent event) {
     textBox.addChar((char) event.getUnicodeCharCode());
+  }
+
+  @Override
+  public void onContextMenu(ContextMenuEvent event) {
+    event.preventDefault();
+    menu.setPopupPosition(event.getNativeEvent().getClientX(), event
+        .getNativeEvent().getClientY());
+    menu.show();
   }
 }

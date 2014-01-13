@@ -7,6 +7,7 @@ import pro.redsoft.demo.textbox.client.SelectionHandler.SelectionArea.Symbol;
 
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.dom.client.CanvasElement;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
@@ -36,9 +37,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     List<Symbol> chars = new ArrayList<SelectionHandler.SelectionArea.Symbol>();
 
     void selectItems(int startInd, int endInd) {
-
-      System.err.println("<system> selectItems:: startInd = " + startInd
-          + " endInd = " + endInd);
 
       // something can be selected..
       clearSelection();
@@ -130,9 +128,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     }
 
     private void selectArea(double x, double w) {
-
-      System.err.println("<system> selectArea: x = " + x + " w = " + w);
-
       Context2d ctx = textBox.context;
       int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
       double startY = 0.1 * canvasHeight;
@@ -185,19 +180,23 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
   @Override
   public void onMouseDown(MouseDownEvent event) {
-    isDown = true;
+    if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+      isDown = true;
+    }
   }
 
   @Override
   public void onMouseUp(MouseUpEvent event) {
-    isDown = false;
+    if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+      isDown = false;
+    }
   }
 
   @Override
   public void onMouseMove(MouseMoveEvent event) {
 
     // skip all actions while user don't press the mouse button
-    if (!isDown) {
+    if (!isDown || (textBox.textBuilder.length() == 0)) {
       return;
     }
 

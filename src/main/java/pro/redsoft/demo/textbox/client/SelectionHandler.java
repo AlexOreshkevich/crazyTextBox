@@ -1,6 +1,7 @@
 package pro.redsoft.demo.textbox.client;
 
 import com.google.gwt.canvas.dom.client.Context2d;
+import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
@@ -39,11 +40,32 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     isDown = false;
   }
 
-  @SuppressWarnings("unused")
   @Override
   public void onMouseMove(MouseMoveEvent event) {
-    int x = event.getRelativeX(textBox.canvas.getCanvasElement());
-    int y = event.getRelativeY(textBox.canvas.getCanvasElement());
+
+    // skip all actions while user don't press the mouse button
+    if (!isDown) {
+      return;
+    }
+
+    // load current dx
+    CanvasElement canvasElement = textBox.canvas.getCanvasElement();
+    int x = event.getRelativeX(canvasElement);
+
+    // if x is less than textBox.dx greater than 25%
+    // execute selection and move cursor
+    double dx = x - textBox.dx;
+    boolean skip = Math.abs((dx / textBox.symbolWidth)) < 0.25;
+
+    if (skip) {
+      return;
+    }
+
+    if (dx < 0) { // moving to left
+      selectLeft();
+    } else {
+      selectRight();
+    }
   }
 
   @Override
@@ -101,11 +123,19 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
   }
 
   void selectLeft() {
-
+    if (textBox.dx > 0) {
+      double dx = textBox.dx;
+      textBox.cursor.moveTo(textBox.dx - textBox.symbolWidth);
+      drawSelection(dx - textBox.symbolWidth, textBox.symbolWidth, false);
+    }
   }
 
   void selectRight() {
-
+    if (textBox.dx <= (textBox.getMaxTextWidth() - textBox.symbolWidth)) {
+      double dx = textBox.dx;
+      textBox.cursor.moveTo(textBox.dx + textBox.symbolWidth);
+      drawSelection(dx, textBox.symbolWidth, false);
+    }
   }
 
   private void drawSelection(double x, double w, boolean remove) {
@@ -116,7 +146,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     double endY = 0.99 * canvasHeight;
 
     if (remove) {
-      ctx.clearRect(x, startY, w, endY);
+      ctx.clearRect(x, 0, w, canvasHeight);
       textBox.setText(textBox.textBuilder.toString());
     } else {
       ctx.save();

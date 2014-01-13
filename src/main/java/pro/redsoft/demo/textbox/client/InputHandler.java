@@ -27,10 +27,6 @@ class InputHandler implements KeyDownHandler, KeyPressHandler {
       event.preventDefault();
       break;
 
-    case KeyCodes.KEY_ENTER:
-      event.preventDefault();
-      break;
-
     case KeyCodes.KEY_LEFT:
       if (event.isShiftKeyDown()) {
         textBox.selectionHandler.selectLeft();
@@ -48,6 +44,13 @@ class InputHandler implements KeyDownHandler, KeyPressHandler {
       }
       event.preventDefault();
       break;
+
+    case KeyCodes.KEY_ENTER:
+    case KeyCodes.KEY_UP:
+    case KeyCodes.KEY_DOWN:
+      event.preventDefault();
+      break;
+
     }
   }
 

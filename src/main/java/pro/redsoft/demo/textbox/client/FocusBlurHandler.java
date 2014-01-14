@@ -5,8 +5,9 @@ import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 
-class FocusBlurHandler implements FocusHandler, BlurHandler {
+class FocusBlurHandler implements FocusHandler {
 
   private final static int CURSOR_INTERVAL = 1000;
 
@@ -24,7 +25,7 @@ class FocusBlurHandler implements FocusHandler, BlurHandler {
 
     // init handlers
     textBox.addFocusHandler(this);
-    textBox.addBlurHandler(this);
+//    textBox.addBlurHandler(this);
   }
 
   @Override
@@ -32,10 +33,7 @@ class FocusBlurHandler implements FocusHandler, BlurHandler {
     cursorTimer.scheduleRepeating(CURSOR_INTERVAL);
   }
 
-  @Override
-  public void onBlur(BlurEvent event) {
+  public void cancelTimer() {
     cursorTimer.cancel();
-    textBox.cursor.removeCursor(textBox.dx);
-    textBox.selectionHandler.clearSelection();
   }
 }

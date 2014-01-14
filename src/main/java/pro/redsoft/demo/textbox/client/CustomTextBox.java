@@ -8,6 +8,8 @@ import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.ui.FocusPanel;
 
 /**
@@ -34,140 +36,162 @@ import com.google.gwt.user.client.ui.FocusPanel;
  */
 public class CustomTextBox extends FocusPanel {
 
-  // Note: It’s best to use vector fonts when scaling or rotating text,
-  // because bitmapped fonts can appear jagged when scaled up or rotated.
-  private final String fontName = "Courier";
-  private final int MAX_CHARS = 310;
+	// Note: It’s best to use vector fonts when scaling or rotating text,
+	// because bitmapped fonts can appear jagged when scaled up or rotated.
+	private final String fontName = "Courier";
+	private final int MAX_CHARS = 310;
 
-  public interface KeyProcessingStrategy {
-    void addChar(char symbol, Canvas canvas, Context2d context);
-  }
+	public interface KeyProcessingStrategy {
+		void addChar(char symbol, Canvas canvas, Context2d context);
+	}
 
-  StringBuilder textBuilder = new StringBuilder();
+	StringBuilder textBuilder = new StringBuilder();
 
-  private final StrategyProvider provider = new StrategyProvider(this);
-  final CursorHandler cursor = new CursorHandler(this);
+	private final StrategyProvider provider = new StrategyProvider(this);
+	final CursorHandler cursor = new CursorHandler(this);
 
-  Canvas canvas = Canvas.createIfSupported();
-  Context2d context = canvas.getContext2d();
+	Canvas canvas = Canvas.createIfSupported();
+	Context2d context = canvas.getContext2d();
 
-  SelectionHandler selectionHandler = new SelectionHandler(this);
-  StringBuilder currentText = new StringBuilder();
+	SelectionHandler selectionHandler = new SelectionHandler(this);
+	StringBuilder currentText = new StringBuilder();
 
-  double dx = 0;
-  int fontHeight = 0;
-  int symbolWidth;
+	double dx = 0;
+	int fontHeight = 0;
+	int symbolWidth;
 
-  private int maxWidth, maxHeight;
+	private int maxWidth, maxHeight;
 
-  public CustomTextBox() {
+	FocusBlurHandler focusBlurHandler;
 
-    setWidget(canvas);
+	public CustomTextBox() {
 
-    // add handlers
-    new FocusBlurHandler(this);
-    new InputHandler(this);
+		setWidget(canvas);
 
-    // TODO move to CSS
-    getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
-    getElement().getStyle().setBorderColor("black");
-    getElement().getStyle().setBorderWidth(1., Unit.PX);
-    getElement().getStyle().setPadding(5, Unit.PX);
-    getElement().getStyle().setCursor(Cursor.TEXT);
+		// add handlers
+		focusBlurHandler = new FocusBlurHandler(this);
+		new InputHandler(this);
 
-    setSize("300px", "30px");
-  }
+		// TODO move to CSS
+		getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
+		getElement().getStyle().setBorderColor("black");
+		getElement().getStyle().setBorderWidth(1., Unit.PX);
+		getElement().getStyle().setPadding(5, Unit.PX);
+		getElement().getStyle().setCursor(Cursor.TEXT);
 
-  Context2d buildItemContext() {
-    Canvas item = Canvas.createIfSupported();
-    Context2d itemContext = item.getContext2d();
-    itemContext.save();
-    itemContext.setFont(fontHeight + "pt " + fontName);
-    return itemContext;
-  }
+		setSize("300px", "30px");
+		Event.addNativePreviewHandler(new Event.NativePreviewHandler() {
 
-  private void initContext(String font) {
+			@Override
+			public void onPreviewNativeEvent(NativePreviewEvent event) {
+				if (event.getTypeInt() == Event.ONCLICK) {
+					int x = event.getNativeEvent().getClientX();
+					int y = event.getNativeEvent().getClientY();
+					if (x > getAbsoluteLeft()
+							&& x < getAbsoluteLeft() + getOffsetWidth()
+							&& y > getAbsoluteTop()
+							&& y < getAbsoluteTop() + getOffsetHeight()) {
+					} else {
+						cursor.removeCursor(dx);
+					    selectionHandler.clearSelection();
+					    //FIXME govnokod
+					    focusBlurHandler.cancelTimer();
+					}
+				}
+			}
+		});
+	}
 
-    resetInd();
+	Context2d buildItemContext() {
+		Canvas item = Canvas.createIfSupported();
+		Context2d itemContext = item.getContext2d();
+		itemContext.save();
+		itemContext.setFont(fontHeight + "pt " + fontName);
+		return itemContext;
+	}
 
-    context.setFont(font);
-    context.setTextAlign(TextAlign.LEFT);
-    context.setFillStyle("black");
-    context.setTextBaseline(TextBaseline.TOP);
-  }
+	private void initContext(String font) {
 
-  boolean isNumber(int c) {
-    return (c >= 48) && (c <= 59);
-  }
+		resetInd();
 
-  void resetInd() {
-    dx = 0;
-    provider.cntr = 0;
-  }
+		context.setFont(font);
+		context.setTextAlign(TextAlign.LEFT);
+		context.setFillStyle("black");
+		context.setTextBaseline(TextBaseline.TOP);
+	}
 
-  void addChar(char symbol) {
+	boolean isNumber(int c) {
+		return (c >= 48) && (c <= 59);
+	}
 
-    // The maximum input length must be set to 310 characters.
-    if (textBuilder.length() == MAX_CHARS) {
-      return;
-    }
+	void resetInd() {
+		dx = 0;
+		provider.cntr = 0;
+	}
 
-    provider.getStrategy().addChar(symbol, canvas, context);
-    textBuilder.append(symbol);
-    selectionHandler.onAddChar(symbol);
-  }
+	void addChar(char symbol) {
 
-  void removeChar() {
+		// The maximum input length must be set to 310 characters.
+		if (textBuilder.length() == MAX_CHARS) {
+			return;
+		}
 
-    // skip removing for empty textBox
-    if (textBuilder.length() == 0) {
-      return;
-    }
+		provider.getStrategy().addChar(symbol, canvas, context);
+		textBuilder.append(symbol);
+		selectionHandler.onAddChar(symbol);
+	}
 
-    // total redraw for shorter buffer width
-    CanvasElement elem = canvas.getCanvasElement();
-    context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
-    String word = textBuilder.toString();
-    setText(word.substring(0, word.length() - 1));
-  }
+	void removeChar() {
 
-  @Override
-  public void setSize(String width, String height) {
+		// skip removing for empty textBox
+		if (textBuilder.length() == 0) {
+			return;
+		}
 
-    int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
-    int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
-    fontHeight = (int) (0.95 * h);
+		// total redraw for shorter buffer width
+		CanvasElement elem = canvas.getCanvasElement();
+		context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
+		String word = textBuilder.toString();
+		setText(word.substring(0, word.length() - 1));
+	}
 
-    h *= 1.2;
+	@Override
+	public void setSize(String width, String height) {
 
-    canvas.setWidth(w + "px");
-    canvas.setHeight(h + "px");
+		int w = Integer.valueOf(width.substring(0, width.indexOf("px")));
+		int h = Integer.valueOf(height.substring(0, height.indexOf("px")));
+		fontHeight = (int) (0.95 * h);
 
-    maxWidth = w;
-    maxHeight = h;
+		h *= 1.2;
 
-    canvas.setCoordinateSpaceWidth(maxWidth);
-    canvas.setCoordinateSpaceHeight(maxHeight);
+		canvas.setWidth(w + "px");
+		canvas.setHeight(h + "px");
 
-    symbolWidth = (int) (fontHeight * 0.95);
-    initContext(fontHeight + "pt " + fontName);
-  }
+		maxWidth = w;
+		maxHeight = h;
 
-  public void setText(String text) {
-    resetInd();
-    for (char symbol : text.toCharArray()) {
-      provider.getStrategy().addChar(symbol, canvas, context);
-    }
-    textBuilder = new StringBuilder();
-    textBuilder.append(text);
-    selectionHandler.onSetText(text);
-  }
+		canvas.setCoordinateSpaceWidth(maxWidth);
+		canvas.setCoordinateSpaceHeight(maxHeight);
 
-  void updateIndex() {
-    dx += symbolWidth;
-  }
+		symbolWidth = (int) (fontHeight * 0.95);
+		initContext(fontHeight + "pt " + fontName);
+	}
 
-  public double getMaxTextWidth() {
-    return symbolWidth * textBuilder.length();
-  }
+	public void setText(String text) {
+		resetInd();
+		for (char symbol : text.toCharArray()) {
+			provider.getStrategy().addChar(symbol, canvas, context);
+		}
+		textBuilder = new StringBuilder();
+		textBuilder.append(text);
+		selectionHandler.onSetText(text);
+	}
+
+	void updateIndex() {
+		dx += symbolWidth;
+	}
+
+	public double getMaxTextWidth() {
+		return symbolWidth * textBuilder.length();
+	}
 }

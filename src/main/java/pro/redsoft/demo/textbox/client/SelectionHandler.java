@@ -55,23 +55,35 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
     void selectItem(int ind, boolean select, boolean cursorLeft) {
 
+      // System.err.println("<system> Select item: ind = " + ind + " select = "
+      // + select + " cursorLeft = " + cursorLeft);
+
       // we cann't select anything if textBox is empty
-      if (chars.size() == 0) {
+      if ((chars.size() == 0) || (ind > (chars.size() - 1))) {
+        return;
+      }
+
+      if (!cursorLeft) {
+        ind++;
+      }
+
+      if (!cursorLeft && (ind == (chars.size()))) {
         return;
       }
 
       assert ((ind >= 0) && (ind < chars.size())) : ind + " cursorLeft = "
           + cursorLeft + " select = " + select;
 
-      System.err.println("<system> Select item: ind = " + ind + " select = "
-          + select + " cursorLeft = " + cursorLeft);
-
       if (select) {
         Symbol s = chars.get(ind);
+        double dx = textBox.dx;
+
+        // if element is already selected, simple move cursor to next element
         if (s.selected) {
+          textBox.cursor.moveTo(dx
+              + ((cursorLeft ? -1 : 1) * textBox.symbolWidth));
           return;
         }
-        double dx = textBox.dx;
 
         // select left from cursor
         if (cursorLeft) {

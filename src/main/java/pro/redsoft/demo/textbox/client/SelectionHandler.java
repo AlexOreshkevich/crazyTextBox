@@ -8,19 +8,18 @@ import pro.redsoft.demo.textbox.client.SelectionHandler.SelectionArea.Symbol;
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DoubleClickEvent;
 import com.google.gwt.event.dom.client.DoubleClickHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
+import com.google.gwt.event.dom.client.MouseEvent;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 
 class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
-    MouseUpHandler, DoubleClickHandler, ClickHandler {
+    MouseUpHandler, DoubleClickHandler {
 
   private final CustomTextBox textBox;
   boolean isDown;
@@ -51,15 +50,21 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     }
 
     int getCurrentInd() {
-      return (int) ((1.1 * textBox.dx) / textBox.symbolWidth);
+      return (int) ((textBox.dx) / textBox.symbolWidth) - 1;
     }
 
     void selectItem(int ind, boolean select, boolean cursorLeft) {
 
-      ind--; // switch to internal coordinates: 0...arr.length - 1
-      if (ind > chars.size()) {
-        ind = chars.size() - 1;
+      // we cann't select anything if textBox is empty
+      if (chars.size() == 0) {
+        return;
       }
+
+      assert ((ind >= 0) && (ind < chars.size())) : ind + " cursorLeft = "
+          + cursorLeft + " select = " + select;
+
+      System.err.println("<system> Select item: ind = " + ind + " select = "
+          + select + " cursorLeft = " + cursorLeft);
 
       if (select) {
         Symbol s = chars.get(ind);
@@ -155,7 +160,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     textBox.addMouseDownHandler(this);
     textBox.addMouseUpHandler(this);
     textBox.addDoubleClickHandler(this);
-    textBox.addClickHandler(this);
   }
 
   void onSetText(String text) {
@@ -182,6 +186,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
   public void onMouseDown(MouseDownEvent event) {
     if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
       isDown = true;
+      moveCursorOnClick(event);
     }
   }
 
@@ -204,6 +209,10 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     CanvasElement canvasElement = textBox.canvas.getCanvasElement();
     int x = event.getRelativeX(canvasElement);
 
+    if ((x > selectionArea.getTextWidth()) || (x <= 0)) {
+      return;
+    }
+
     // if relative (dx) displacement greater than 25%,
     // execute selection and move cursor
     double dx = x - textBox.dx;
@@ -213,10 +222,12 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
       return;
     }
 
-    int ind = (int) ((1.1 * textBox.dx) / textBox.symbolWidth);
     boolean isLeft = dx < 0;
-
-    selectionArea.selectItem(ind + (isLeft ? -1 : 1), true, isLeft);
+    if (isLeft) {
+      selectLeft();
+    } else {
+      selectRight();
+    }
   }
 
   @Override
@@ -262,10 +273,10 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     }
   }
 
-  @Override
-  public void onClick(ClickEvent event) {
+  void moveCursorOnClick(MouseEvent<?> event) {
 
     // request focus
+    event.preventDefault();
     textBox.setFocus(true);
 
     // remove existing selection
@@ -289,11 +300,11 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
   }-*/;
 
   public void selectLeft() {
-    selectionArea.selectItem(selectionArea.getCurrentInd() - 1, true, true);
+    selectionArea.selectItem(selectionArea.getCurrentInd(), true, true);
   }
 
   public void selectRight() {
-    selectionArea.selectItem(selectionArea.getCurrentInd() + 1, true, false);
+    selectionArea.selectItem(selectionArea.getCurrentInd(), true, false);
   }
 
   public void clearSelection() {

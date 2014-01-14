@@ -4,6 +4,7 @@ MANIFEST.MF
 target/
 
 src/main/webapp/CrazyTextBox
+src/main/webapp/WEB-INF/deploy
 
 pom.xml.orig
 *.versionsBackup

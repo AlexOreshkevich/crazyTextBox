@@ -34,7 +34,7 @@ public class CrazyTextBoxEntryPoint implements EntryPoint {
   public void onModuleLoad() {
 
     textBox.setSize("1000px", "30px");
-    // textBox.setText("abcdefghwxyz 1234+++");
+    textBox.setText("abcdefghwxyz 1234+++");
 
     // ===============================================================
     VerticalPanel root = new VerticalPanel();

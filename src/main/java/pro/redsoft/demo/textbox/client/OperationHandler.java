@@ -140,6 +140,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
     }
 
     void clearSelection() {
+      isAllSelected = false;
       textBox.setText(textBox.textBuilder.toString());
     }
 

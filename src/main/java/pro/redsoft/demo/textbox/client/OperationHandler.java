@@ -46,7 +46,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
         chars.get(i - 1).selected = true;
       }
 
-      textBox.cursor.moveTo(endInd * textBox.symbolWidth);
+      textBox.cursorHandler.moveTo(endInd * textBox.symbolWidth);
       selectArea((startInd - 1) * textBox.symbolWidth,
           ((endInd - startInd) + 1) * textBox.symbolWidth);
     }
@@ -73,8 +73,9 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
         return;
       }
 
-      assert ((ind >= 0) && (ind < chars.size())) : ind + " cursorLeft = "
-          + cursorLeft + " select = " + select;
+      if (!(ind >= 0) || !(ind < chars.size())) {
+        return;
+      }
 
       if (select) {
         Symbol s = chars.get(ind);
@@ -82,7 +83,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
 
         // if element is already selected, simple move cursor to next element
         if (s.selected) {
-          textBox.cursor.moveTo(dx
+          textBox.cursorHandler.moveTo(dx
               + ((cursorLeft ? -1 : 1) * textBox.symbolWidth));
           return;
         }
@@ -95,7 +96,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
             return;
           }
 
-          textBox.cursor.moveTo(textBox.dx - textBox.symbolWidth);
+          textBox.cursorHandler.moveTo(textBox.dx - textBox.symbolWidth);
           s.selected = true;
           selectArea(dx - textBox.symbolWidth, textBox.symbolWidth);
 
@@ -106,7 +107,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
             return;
           }
 
-          textBox.cursor.moveTo(dx + textBox.symbolWidth);
+          textBox.cursorHandler.moveTo(dx + textBox.symbolWidth);
           s.selected = true;
           selectArea(dx, textBox.symbolWidth);
         }
@@ -152,7 +153,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
       ctx.save();
       ctx.setFillStyle("blue");
       ctx.setGlobalAlpha(0.3);
-      ctx.fillRect(x, startY, w, endY);
+      ctx.fillRect(x - 1, startY, w + 1, endY);
       ctx.restore();
     }
 
@@ -302,7 +303,7 @@ class OperationHandler implements MouseMoveHandler, MouseDownHandler,
     double curDx = textBox.symbolWidth * symbolUnderCLick;
 
     // change cursor position
-    textBox.cursor.moveTo(curDx);
+    textBox.cursorHandler.moveTo(curDx);
   }
 
   native void removeSelection() /*-{

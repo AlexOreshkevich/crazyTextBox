@@ -35,7 +35,7 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
       if (event.isShiftKeyDown()) {
         textBox.operationHandler.selectLeft();
       } else {
-        textBox.cursor.moveLeft();
+        textBox.cursorHandler.moveLeft();
       }
       event.preventDefault();
       break;
@@ -44,7 +44,7 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
       if (event.isShiftKeyDown()) {
         textBox.operationHandler.selectRight();
       } else {
-        textBox.cursor.moveRight();
+        textBox.cursorHandler.moveRight();
       }
       event.preventDefault();
       break;

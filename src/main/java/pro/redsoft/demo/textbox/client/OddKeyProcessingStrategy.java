@@ -23,7 +23,7 @@ class OddKeyProcessingStrategy implements CustomTextBox.KeyProcessingStrategy {
   public void addChar(char symbol, Canvas canvas, Context2d context) {
 
     Context2d itemContext = textBox.buildItemContext();
-    textBox.cursor.removeCursor(textBox.dx);
+    textBox.cursorHandler.removeCursor(textBox.dx);
     context.clearRect(textBox.dx, 0, textBox.symbolWidth, canvas.getCoordinateSpaceHeight());
 
     itemContext.translate(0, textBox.fontHeight);

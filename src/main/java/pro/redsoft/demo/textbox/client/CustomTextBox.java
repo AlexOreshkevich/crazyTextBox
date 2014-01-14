@@ -31,49 +31,80 @@ import com.google.gwt.user.client.ui.FocusPanel;
  */
 public class CustomTextBox extends FocusPanel {
 
-  // Note: It’s best to use vector fonts when scaling or rotating text,
-  // because bitmapped fonts can appear jagged when scaled up or rotated.
-  private final String fontName = "Courier";
-  private final int MAX_CHARS = 310;
-
   public interface KeyProcessingStrategy {
     void addChar(char symbol, Canvas canvas, Context2d context);
   }
 
-  StringBuilder textBuilder = new StringBuilder();
-
-  private final StrategyProvider provider = new StrategyProvider(this);
-  final CursorHandler cursor = new CursorHandler(this);
-
+  // canvas and context2D as required by task
   Canvas canvas = Canvas.createIfSupported();
   Context2d context = canvas.getContext2d();
 
+  // representation of text based on char buffer: stringBuilder
+  StringBuilder textBuilder = new StringBuilder();
+
+  // manipulation of different aspects of user interaction
+  // based on browser event handling
+  FocusBlurHandler focusBlurHandler;
+  CursorHandler cursorHandler;
   OperationHandler operationHandler;
-  StringBuilder currentText = new StringBuilder();
+  InputHandler inputHandler;
 
+  /** Current displacement of cursor at the X axis. */
   double dx = 0;
-  int fontHeight = 0;
-  int symbolWidth;
 
+  // font settings
+  int fontHeight = 0;
+  String fontName = "Courier";
+  int symbolWidth;
+  private final int MAX_CHARS = 310;
+
+  // current calculated width/height
   private int maxWidth, maxHeight;
 
-  FocusBlurHandler focusBlurHandler;
-  InputHandler inputHandler;
+  /** Custom context menu. */
   SimpleContextMenu menu;
+
+  /** Provides input strategies (odd, even). */
+  private final StrategyProvider provider = new StrategyProvider(this);
 
   public CustomTextBox() {
     setWidget(canvas);
 
-    // add handlers
+    // add event handlers
+    cursorHandler = new CursorHandler(this);
     focusBlurHandler = new FocusBlurHandler(this);
     inputHandler = new InputHandler(this);
     operationHandler = new OperationHandler(this);
     menu = new SimpleContextMenu(this);
 
+    // load styles from .css
     setStyleName("gwt-CustomTextBox");
+
+    // set default size
     setSize("300px", "30px");
   }
 
+  /**
+   * Called every time user types a char.
+   * 
+   * @param symbol
+   */
+  void addChar(char symbol) {
+
+    // The maximum input length must be set to 310 characters.
+    if (textBuilder.length() == MAX_CHARS) {
+      return;
+    }
+
+    // execute appropriate input strategy
+    provider.getStrategy().addChar(symbol, canvas, context);
+
+    // modify text representation parameters
+    textBuilder.append(symbol);
+    operationHandler.onAddChar(symbol);
+  }
+
+  // TODO should be moved to the base class for all input strategies
   Context2d buildItemContext() {
     Canvas item = Canvas.createIfSupported();
     Context2d itemContext = item.getContext2d();
@@ -82,35 +113,25 @@ public class CustomTextBox extends FocusPanel {
     return itemContext;
   }
 
-  private void initContext(String font) {
-
-    resetInd();
-
-    context.setFont(font);
-    context.setTextAlign(TextAlign.LEFT);
-    context.setFillStyle("black");
-    context.setTextBaseline(TextBaseline.TOP);
-  }
-
+  // TODO the same
   boolean isNumber(int c) {
     return (c >= 48) && (c <= 59);
   }
 
-  void resetInd() {
-    dx = 0;
-    provider.cntr = 0;
+  void clearCanvas() {
+    context.clearRect(0, 0, maxWidth, maxHeight);
   }
 
-  void addChar(char symbol) {
+  double getMaxTextWidth() {
+    return symbolWidth * textBuilder.length();
+  }
 
-    // The maximum input length must be set to 310 characters.
-    if (textBuilder.length() == MAX_CHARS) {
-      return;
-    }
-
-    provider.getStrategy().addChar(symbol, canvas, context);
-    textBuilder.append(symbol);
-    operationHandler.onAddChar(symbol);
+  private void initContext(String font) {
+    resetInd();
+    context.setFont(font);
+    context.setTextAlign(TextAlign.LEFT);
+    context.setFillStyle("black");
+    context.setTextBaseline(TextBaseline.TOP);
   }
 
   void removeChar() {
@@ -125,6 +146,11 @@ public class CustomTextBox extends FocusPanel {
     context.clearRect(0, 0, elem.getWidth(), elem.getHeight());
     String word = textBuilder.toString();
     setText(word.substring(0, word.length() - 1));
+  }
+
+  void resetInd() {
+    dx = 0;
+    provider.cntr = 0;
   }
 
   @Override
@@ -160,15 +186,11 @@ public class CustomTextBox extends FocusPanel {
     operationHandler.onSetText(text);
   }
 
-  void clearCanvas() {
-    context.clearRect(0, 0, maxWidth, maxHeight);
+  public String getText() {
+    return textBuilder.toString();
   }
 
   void updateIndex() {
     dx += symbolWidth;
-  }
-
-  public double getMaxTextWidth() {
-    return symbolWidth * textBuilder.length();
   }
 }

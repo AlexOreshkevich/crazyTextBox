@@ -15,7 +15,7 @@ class FocusBlurHandler implements FocusHandler, BlurHandler {
 
     @Override
     public void run() {
-      textBox.cursor.run(CURSOR_INTERVAL);
+      textBox.cursorHandler.run(CURSOR_INTERVAL);
     }
   };
 
@@ -35,6 +35,6 @@ class FocusBlurHandler implements FocusHandler, BlurHandler {
   @Override
   public void onBlur(BlurEvent event) {
     cursorTimer.cancel();
-    textBox.cursor.removeCursor(textBox.dx);
+    textBox.cursorHandler.removeCursor(textBox.dx);
   }
 }

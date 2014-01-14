@@ -20,7 +20,7 @@ class EvenKeyProcessingStrategy implements CustomTextBox.KeyProcessingStrategy {
 
     // Every letter at an even position is shown turned upside down.
     Context2d itemContext = textBox.buildItemContext();
-    textBox.cursor.removeCursor(textBox.dx);
+    textBox.cursorHandler.removeCursor(textBox.dx);
     context.clearRect(textBox.dx, 0, textBox.symbolWidth,
         canvas.getCoordinateSpaceHeight());
 

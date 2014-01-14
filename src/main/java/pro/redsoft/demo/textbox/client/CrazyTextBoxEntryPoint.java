@@ -3,7 +3,7 @@ package pro.redsoft.demo.textbox.client;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
-import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -19,13 +19,14 @@ public class CrazyTextBoxEntryPoint implements EntryPoint {
 
       @Override
       public void onUncaughtException(Throwable e) {
-        logPanel.getElement().setInnerText(e.getCause().getMessage());
-        e.getCause().printStackTrace();
+        Window.alert("UncaughtException: " + e.getMessage());
+        e.printStackTrace();
+        if (GWT.isProdMode()) {
+          Window.Location.reload();
+        }
       }
     });
   }
-
-  HTMLPanel logPanel = new HTMLPanel("pre", "");
 
   /**
    * This is the entry point method.
@@ -40,10 +41,8 @@ public class CrazyTextBoxEntryPoint implements EntryPoint {
     VerticalPanel root = new VerticalPanel();
     root.add(textBox);
     root.setSpacing(20);
-    root.add(logPanel);
 
     RootPanel.get("crazyTextBoxContainer").add(root);
-
     textBox.setFocus(true);
   }
 }

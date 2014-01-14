@@ -1,52 +1,70 @@
 <!doctype html>
-<!-- The DOCTYPE declaration above will set the    -->
-<!-- browser's rendering engine into               -->
-<!-- "Standards Mode". Replacing this declaration  -->
-<!-- with a "Quirks Mode" doctype may lead to some -->
-<!-- differences in layout.                        -->
-
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
-    <!--                                                               -->
-    <!-- Consider inlining CSS to reduce the number of requested files -->
-    <!--                                                               -->
-    <link type="text/css" rel="stylesheet" href="CrazyTextBox.css">
+<link type="text/css" rel="stylesheet" href="CrazyTextBox.css">
+<title>CrazyTextBox</title>
+<script type="text/javascript" language="javascript"
+	src="CrazyTextBox/CrazyTextBox.nocache.js"></script>
+</head>
+<body>
 
-    <!--                                           -->
-    <!-- Any title is fine                         -->
-    <!--                                           -->
-    <title>CrazyTextBox</title>
+	<!-- OPTIONAL: include this if you want history support -->
+	<iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1'
+		style="position: absolute; width: 0; height: 0; border: 0"></iframe>
 
-    <!--                                           -->
-    <!-- This script loads your compiled module.   -->
-    <!-- If you add any GWT meta tags, they must   -->
-    <!-- be added before this line.                -->
-    <!--                                           -->
-    <script type="text/javascript" language="javascript" src="CrazyTextBox/CrazyTextBox.nocache.js"></script>
-  </head>
+	<!-- RECOMMENDED if your web app will not function without JavaScript enabled -->
+	<noscript>
+		<div
+			style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
+			Your web browser must have JavaScript enabled in order for this
+			application to display correctly.</div>
+	</noscript>
 
-  <!--                                           -->
-  <!-- The body can have arbitrary html, or      -->
-  <!-- you can leave the body empty if you want  -->
-  <!-- to create a completely dynamic UI.        -->
-  <!--                                           -->
-  <body>
+	<h1 class='styled'>CrazyTextBox Demo Project</h1>
 
-    <!-- OPTIONAL: include this if you want history support -->
-    <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1' style="position:absolute;width:0;height:0;border:0"></iframe>
+	<div id="crazyTextBoxContainer" width="1000px"></div>
 
-    <!-- RECOMMENDED if your web app will not function without JavaScript enabled -->
-    <noscript>
-      <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
-        Your web browser must have JavaScript enabled
-        in order for this application to display correctly.
-      </div>
-    </noscript>
+	<h2 class='styled'>Shortcuts</h2>
+	<ul class='styled'>
+		<li>BACKSPACE - delete symbol that stands before current cursor
+			position</li>
+		<li>CTRL + A - select all symbols</li>
+		<li>CTRL + C - copy selected symbols to buffer</li>
+		<li>CTRL + X - cut selected symbols to buffer</li>
+		<li>CTRL + V - paste symbols from buffer after current cursor
+			position one by one</li>
+	</ul>
 
-    <h1>CrazyTextBox Demo Project</h1>
+	<h2 class='styled'>Implementation simplifications</h2>
+	<ul class='styled'>
+		<li>We use font with fixed height and font-family (Couirier)</li>
+		<li>Instead of maintaining visibility of selection area when lose
+			focus (blur), we simply show selected area</li>
+		<li>Cursor positioning works as right from symbol (for
+			mouse-based positioning), so 0 coordinate can be achieved only with
+			keyboard positioning</li>
+		<li>Vertical alignment of flipped chars works correctly only for
+			english chars, special symbols and digital numbers</li>
+		<li>Focus management achieved via extending FocusPanel.</li>
+	</ul>
 
-	<div id="crazyTextBoxContainer" width="1000px"> </div>
-  </body>
+	<h2 class='styled'>Unimplemented feautures</h2>
+	<ul class='styled'>
+		<li>If the text doesn't fit its horizontal bounds, the control
+			must draw the text up to the last fully visible letter and let the
+			user move back and forth to the parts of the text which don't fit,
+			using a cursor.</li>
+		<li>An attempt to select a text beyond the control bounds shall
+			cause the input to scroll (left or right) to show the current cursor
+			position as it moves (left or right) along the course of the
+			selection.</li>
+		<li>Doesn't tested for touch enabled devices (iOS, Anroid)</li>
+	</ul>
+
+	<h2 class='styled'>Source code</h2>
+	<a class='styled'
+		href="https://github.com/AlexOreshkevich/crazyTextBox">https://github.com/AlexOreshkevich/crazyTextBox</a>
+</body>
 </html>

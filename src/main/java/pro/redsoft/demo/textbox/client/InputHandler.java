@@ -12,7 +12,6 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
     ContextMenuHandler {
 
   private final CustomTextBox textBox;
-  private SimpleContextMenu menu = new SimpleContextMenu();
 
   public InputHandler(CustomTextBox textBox) {
     this.textBox = textBox;
@@ -67,8 +66,8 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
   @Override
   public void onContextMenu(ContextMenuEvent event) {
     event.preventDefault();
-    menu.setPopupPosition(event.getNativeEvent().getClientX(), event
+    textBox.menu.setPopupPosition(event.getNativeEvent().getClientX(), event
         .getNativeEvent().getClientY());
-    menu.show();
+    textBox.menu.show();
   }
 }

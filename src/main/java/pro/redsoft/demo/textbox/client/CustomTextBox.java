@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.ui.FocusPanel;
 
@@ -64,8 +65,9 @@ public class CustomTextBox extends FocusPanel {
 
 	FocusBlurHandler focusBlurHandler;
 
-	public CustomTextBox() {
+	public final SimpleContextMenu menu = new SimpleContextMenu();
 
+	public CustomTextBox() {
 		setWidget(canvas);
 
 		// add handlers
@@ -85,6 +87,10 @@ public class CustomTextBox extends FocusPanel {
 			@Override
 			public void onPreviewNativeEvent(NativePreviewEvent event) {
 				if (event.getTypeInt() == Event.ONCLICK) {
+					if (menu.isShowing()) {
+						menu.hide();
+						return;
+					}
 					int x = event.getNativeEvent().getClientX();
 					int y = event.getNativeEvent().getClientY();
 					if (x > getAbsoluteLeft()
@@ -93,9 +99,9 @@ public class CustomTextBox extends FocusPanel {
 							&& y < getAbsoluteTop() + getOffsetHeight()) {
 					} else {
 						cursor.removeCursor(dx);
-					    selectionHandler.clearSelection();
-					    //FIXME govnokod
-					    focusBlurHandler.cancelTimer();
+						selectionHandler.clearSelection();
+						// FIXME govnokod
+						focusBlurHandler.cancelTimer();
 					}
 				}
 			}

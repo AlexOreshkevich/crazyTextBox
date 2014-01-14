@@ -13,7 +13,6 @@ public class SimpleContextMenu extends PopupPanel {
 
   public SimpleContextMenu() {
     createPopupMenu();
-    setAutoHideEnabled(true);
   }
 
   private void createPopupMenu() {

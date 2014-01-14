@@ -5,8 +5,6 @@ import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.canvas.dom.client.Context2d.TextAlign;
 import com.google.gwt.canvas.dom.client.Context2d.TextBaseline;
 import com.google.gwt.dom.client.CanvasElement;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.ui.FocusPanel;
 
 /**
@@ -50,7 +48,7 @@ public class CustomTextBox extends FocusPanel {
   Canvas canvas = Canvas.createIfSupported();
   Context2d context = canvas.getContext2d();
 
-  SelectionHandler selectionHandler = new SelectionHandler(this);
+  OperationHandler operationHandler;
   StringBuilder currentText = new StringBuilder();
 
   double dx = 0;
@@ -60,42 +58,20 @@ public class CustomTextBox extends FocusPanel {
   private int maxWidth, maxHeight;
 
   FocusBlurHandler focusBlurHandler;
-
-  public final SimpleContextMenu menu = new SimpleContextMenu();
+  InputHandler inputHandler;
+  SimpleContextMenu menu;
 
   public CustomTextBox() {
     setWidget(canvas);
 
     // add handlers
     focusBlurHandler = new FocusBlurHandler(this);
-    new InputHandler(this);
+    inputHandler = new InputHandler(this);
+    operationHandler = new OperationHandler(this);
+    menu = new SimpleContextMenu(this);
 
     setStyleName("gwt-CustomTextBox");
     setSize("300px", "30px");
-
-    Event.addNativePreviewHandler(new Event.NativePreviewHandler() {
-
-      @Override
-      public void onPreviewNativeEvent(NativePreviewEvent event) {
-        if (event.getTypeInt() == Event.ONCLICK) {
-          if (menu.isShowing()) {
-            menu.hide();
-            return;
-          }
-          int x = event.getNativeEvent().getClientX();
-          int y = event.getNativeEvent().getClientY();
-          if ((x > getAbsoluteLeft())
-              && (x < (getAbsoluteLeft() + getOffsetWidth()))
-              && (y > getAbsoluteTop())
-              && (y < (getAbsoluteTop() + getOffsetHeight()))) {
-          } else {
-            cursor.removeCursor(dx);
-            selectionHandler.clearSelection();
-            focusBlurHandler.cancelTimer();
-          }
-        }
-      }
-    });
   }
 
   Context2d buildItemContext() {
@@ -134,7 +110,7 @@ public class CustomTextBox extends FocusPanel {
 
     provider.getStrategy().addChar(symbol, canvas, context);
     textBuilder.append(symbol);
-    selectionHandler.onAddChar(symbol);
+    operationHandler.onAddChar(symbol);
   }
 
   void removeChar() {
@@ -175,12 +151,17 @@ public class CustomTextBox extends FocusPanel {
 
   public void setText(String text) {
     resetInd();
+    clearCanvas();
     for (char symbol : text.toCharArray()) {
       provider.getStrategy().addChar(symbol, canvas, context);
     }
     textBuilder = new StringBuilder();
     textBuilder.append(text);
-    selectionHandler.onSetText(text);
+    operationHandler.onSetText(text);
+  }
+
+  void clearCanvas() {
+    context.clearRect(0, 0, maxWidth, maxHeight);
   }
 
   void updateIndex() {

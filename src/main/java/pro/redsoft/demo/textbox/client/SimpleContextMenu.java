@@ -1,44 +1,38 @@
 package pro.redsoft.demo.textbox.client;
 
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.Style.BorderStyle;
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.PopupPanel;
 
-public class SimpleContextMenu extends PopupPanel {
+class SimpleContextMenu extends PopupPanel {
 
-  public SimpleContextMenu() {
+  CustomTextBox textBox;
+
+  SimpleContextMenu(CustomTextBox textBox) {
+    this.textBox = textBox;
+    setStyleName("popup");
     createPopupMenu();
+    setAutoHideEnabled(true);
   }
 
   private void createPopupMenu() {
     MenuBar popupMenuBar = new MenuBar(true);
-    MenuItem copyItem = new MenuItem(SafeHtmlUtils.fromTrustedString("Copy"),
-        getCopyCommand());
-    MenuItem cutItem = new MenuItem(SafeHtmlUtils.fromTrustedString("Cut"),
-        getCutCommand());
-    MenuItem pasteItem = new MenuItem(SafeHtmlUtils.fromTrustedString("Paste"),
-        getPasteCommand());
-
-    setStyleName("popup");
-    copyItem.addStyleName("popup-item");
-    cutItem.addStyleName("popup-item");
-    pasteItem.addStyleName("popup-item");
-
-    getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
-    getElement().getStyle().setBorderColor("black");
-    getElement().getStyle().setBorderWidth(1., Unit.PX);
-
-    popupMenuBar.addItem(copyItem);
-    popupMenuBar.addItem(cutItem);
-    popupMenuBar.addItem(pasteItem);
+    buildMenuItem(popupMenuBar, "Copy (Ctrl + C)", getCopyCommand());
+    buildMenuItem(popupMenuBar, "Cut (Ctrl + X)", getCutCommand());
+    buildMenuItem(popupMenuBar, "Paste (Ctrl + V)", getPasteCommand());
+    buildMenuItem(popupMenuBar, "Select All (Ctrl + A)", getSelectAllCommand());
 
     popupMenuBar.setVisible(true);
     add(popupMenuBar);
+  }
+
+  private void buildMenuItem(MenuBar popupMenuBar, String cmdText,
+      ScheduledCommand cmd) {
+    MenuItem item = new MenuItem(SafeHtmlUtils.fromTrustedString(cmdText), cmd);
+    item.addStyleName("popup-item");
+    popupMenuBar.addItem(item);
   }
 
   private ScheduledCommand getCopyCommand() {
@@ -46,8 +40,9 @@ public class SimpleContextMenu extends PopupPanel {
 
       @Override
       public void execute() {
-        Window.alert("copy");
+        textBox.operationHandler.copy();
         hide();
+        textBox.setFocus(true);
       }
     };
   }
@@ -57,8 +52,9 @@ public class SimpleContextMenu extends PopupPanel {
 
       @Override
       public void execute() {
-        Window.alert("cut");
+        textBox.operationHandler.cut();
         hide();
+        textBox.setFocus(true);
       }
     };
   }
@@ -68,10 +64,22 @@ public class SimpleContextMenu extends PopupPanel {
 
       @Override
       public void execute() {
-        Window.alert("paste");
+        textBox.operationHandler.paste();
         hide();
+        textBox.setFocus(true);
       }
     };
   }
 
+  private ScheduledCommand getSelectAllCommand() {
+    return new ScheduledCommand() {
+
+      @Override
+      public void execute() {
+        textBox.operationHandler.selectAll();
+        hide();
+        textBox.setFocus(true);
+      }
+    };
+  }
 }

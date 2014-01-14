@@ -1,9 +1,10 @@
 package pro.redsoft.demo.textbox.client;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-import pro.redsoft.demo.textbox.client.SelectionHandler.SelectionArea.Symbol;
+import pro.redsoft.demo.textbox.client.OperationHandler.SelectionArea.Symbol;
 
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.dom.client.CanvasElement;
@@ -18,11 +19,12 @@ import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 
-class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
+class OperationHandler implements MouseMoveHandler, MouseDownHandler,
     MouseUpHandler, DoubleClickHandler {
 
   private final CustomTextBox textBox;
   boolean isDown;
+  private List<Character> buffer;
 
   class SelectionArea {
 
@@ -33,7 +35,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     }
 
     boolean isAllSelected;
-    List<Symbol> chars = new ArrayList<SelectionHandler.SelectionArea.Symbol>();
+    List<Symbol> chars = new ArrayList<OperationHandler.SelectionArea.Symbol>();
 
     void selectItems(int startInd, int endInd) {
 
@@ -138,9 +140,6 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     }
 
     void clearSelection() {
-      Context2d ctx = textBox.context;
-      int canvasHeight = textBox.canvas.getCanvasElement().getHeight();
-      ctx.clearRect(0, 0, getTextWidth(), canvasHeight);
       textBox.setText(textBox.textBuilder.toString());
     }
 
@@ -163,7 +162,7 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
 
   private final SelectionArea selectionArea;
 
-  SelectionHandler(CustomTextBox textBox) {
+  OperationHandler(CustomTextBox textBox) {
 
     this.textBox = textBox;
     selectionArea = new SelectionArea();
@@ -172,6 +171,8 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
     textBox.addMouseDownHandler(this);
     textBox.addMouseUpHandler(this);
     textBox.addDoubleClickHandler(this);
+
+    buffer = new LinkedList<Character>();
   }
 
   void onSetText(String text) {
@@ -324,5 +325,55 @@ class SelectionHandler implements MouseMoveHandler, MouseDownHandler,
       return;
     }
     selectionArea.clearSelection();
+  }
+
+  public void copy() {
+
+    // flush buffer
+    buffer.clear();
+
+    // load all selected symbols into the buffer
+    for (Symbol symbol : selectionArea.chars) {
+      if (symbol.selected) {
+        buffer.add(symbol.value);
+      }
+    }
+  }
+
+  public void cut() {
+
+    // flush buffer
+    buffer.clear();
+
+    // build String that contains all unselected chars
+    StringBuilder sb = new StringBuilder();
+    for (Symbol symbol : selectionArea.chars) {
+      if (symbol.selected) {
+        buffer.add(symbol.value);
+      } else {
+        sb.append(symbol.value);
+      }
+    }
+
+    // remove selected chars from textBox
+    // TODO simplest implementation: full redraw
+    textBox.setText(sb.toString());
+  }
+
+  public void paste() {
+
+    // do nothing if buffer is empty
+    if (buffer.isEmpty()) {
+      return;
+    }
+
+    // paste symbols from buffer one by one
+    for (Character symbol : buffer) {
+      textBox.addChar(symbol);
+    }
+  }
+
+  public void selectAll() {
+    selectionArea.selectAll();
   }
 }

@@ -33,7 +33,7 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
 
     case KeyCodes.KEY_LEFT:
       if (event.isShiftKeyDown()) {
-        textBox.selectionHandler.selectLeft();
+        textBox.operationHandler.selectLeft();
       } else {
         textBox.cursor.moveLeft();
       }
@@ -42,7 +42,7 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
 
     case KeyCodes.KEY_RIGHT:
       if (event.isShiftKeyDown()) {
-        textBox.selectionHandler.selectRight();
+        textBox.operationHandler.selectRight();
       } else {
         textBox.cursor.moveRight();
       }
@@ -54,7 +54,36 @@ class InputHandler implements KeyDownHandler, KeyPressHandler,
     case KeyCodes.KEY_DOWN:
       event.preventDefault();
       break;
+    }
 
+    // Operations and behavior
+    // Clipboard operations: copy, cut, paste, select all
+    if (event.isControlKeyDown()) {
+      switch (event.getNativeKeyCode()) {
+      case 'c':
+      case 'C':
+        textBox.operationHandler.copy();
+        event.preventDefault();
+        break;
+
+      case 'x':
+      case 'X':
+        textBox.operationHandler.cut();
+        event.preventDefault();
+        break;
+
+      case 'v':
+      case 'V':
+        textBox.operationHandler.paste();
+        event.preventDefault();
+        break;
+
+      case 'a':
+      case 'A':
+        textBox.operationHandler.selectAll();
+        event.preventDefault();
+        break;
+      }
     }
   }
 

@@ -3,6 +3,8 @@
 MANIFEST.MF
 target/
 
+src/main/webapp/CrazyTextBox
+
 pom.xml.orig
 *.versionsBackup
 

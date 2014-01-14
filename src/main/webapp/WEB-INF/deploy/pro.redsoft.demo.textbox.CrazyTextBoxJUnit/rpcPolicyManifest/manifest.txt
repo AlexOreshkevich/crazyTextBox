@@ -1,0 +1,2 @@
+# Module pro.redsoft.demo.textbox.CrazyTextBoxJUnit
+# RPC service class, partial path of RPC policy file

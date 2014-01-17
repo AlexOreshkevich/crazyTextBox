@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module>
-  <!-- Inherit our applications main module.                      -->
-  <inherits name='pro.redsoft.demo.textbox.CrazyTextBox' />
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<!--<module>-->
+  <!--&lt;!&ndash; Inherit our applications main module.                      &ndash;&gt;-->
+  <!--<inherits name='pro.redsoft.demo.textbox.CrazyTextBox' />-->
 
-  <!-- Specify the path to any remote services.                   -->
-  <servlet path="/CrazyTextBox/greet" class="pro.redsoft.demo.textbox.server.GreetingServiceImpl" />
+  <!--&lt;!&ndash; Specify the path to any remote services.                   &ndash;&gt;-->
+  <!--<servlet path="/CrazyTextBox/greet" class="pro.redsoft.demo.textbox.server.GreetingServiceImpl" />-->
 
-</module>
+<!--</module>-->

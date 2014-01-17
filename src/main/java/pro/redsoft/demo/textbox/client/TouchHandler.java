@@ -1,7 +1,6 @@
 package pro.redsoft.demo.textbox.client;
 
 import com.google.gwt.event.dom.client.*;
-import com.google.gwt.user.client.ui.TextBox;
 
 /**
  * @author Alexander Novik
@@ -15,21 +14,18 @@ public class TouchHandler implements TouchStartHandler, TouchEndHandler, TouchMo
         this.textBox = textBox;
         textBox.addTouchStartHandler(this);
         textBox.addTouchEndHandler(this);
+        textBox.hiddenBox.addKeyPressHandler(textBox.inputHandler);
+        textBox.hiddenBox.addKeyDownHandler(textBox.inputHandler);
     }
 
     @Override
     public void onTouchStart(TouchStartEvent touchStartEvent) {
 
-        TextBox er = (TextBox) textBox.panel.getWidget(textBox.panel.getWidgetIndex(textBox.hiddenBox));
-        er.setFocus(true);
-
     }
 
     @Override
     public void onTouchEnd(TouchEndEvent touchEndEvent) {
-//        Window.alert("TouchEventEnd");
-//        TextBox focus = TextBox.wrap(DOM.getElementById("touchText"));
-//        focus.setFocus(true);
+        textBox.hiddenBox.setFocus(true);
     }
 
     @Override
